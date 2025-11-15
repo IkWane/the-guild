@@ -1,0 +1,11 @@
+{
+    "Diag 1": {
+        "text" : "How many chickens ?",
+        "choices": [
+            "You chose death !",
+            "I don't know.",
+            "Prout",
+            "Family."
+        ]
+    }
+}

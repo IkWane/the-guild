@@ -1,0 +1,2 @@
+C:/msys64/mingw64/bin/ar.exe qc libmain.a CMakeFiles/main.dir/FileManager.cpp.obj CMakeFiles/main.dir/RNG.cpp.obj CMakeFiles/main.dir/TheGuild.cpp.obj
+C:/msys64/mingw64/bin/ranlib.exe libmain.a

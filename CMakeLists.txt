@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.29)
+project(the-guild)
+set(exec_name the-guild)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_executable(${exec_name} src/main.cpp)
+add_subdirectory(src)
