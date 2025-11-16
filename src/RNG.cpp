@@ -1,15 +1,10 @@
 #include "RNG.hpp"
 #include <iostream>
 
-int rPrint()
-{
-    std::cout << "test" << std::endl;
-    return std::random_device{}();
-}
-
 RNG::RNG(unsigned int seed)
 {
-    generator = std::mt19937(seed);
+    std::cout << seed << std::endl;
+    generator = std::mt19937( seed == UINT_MAX ? std::random_device{}() : seed);
 }
 
 int RNG::uniformInt(int min, int max)

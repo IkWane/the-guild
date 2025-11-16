@@ -1,11 +1,9 @@
 #include <random>
 
-int rPrint();
-
 class RNG 
 {
 public:
-    static RNG &get(unsigned int seed = rPrint())
+    static RNG &get(unsigned int seed = UINT_MAX)
     {
         static RNG instance(seed);
         return instance;

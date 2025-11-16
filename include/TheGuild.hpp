@@ -8,7 +8,7 @@ class TheGuild
 {
 public:
     TheGuild();
-    TheGuild(const char *path);
+    TheGuild(std::string &path);
     int gold;
     std::vector<Adventurer> adventurers;
     void saveGuild(const char *path);

@@ -1,11 +1,44 @@
 {
-    "Diag 1": {
+    "_comment": "This is a JSON file containing dialogs for The Guild game. prefixes: Q = multi-choice question, I = information, E = text entry, N = number entry, Test = for testing purposes",
+    "Test": {
         "text" : "How many chickens ?",
         "choices": [
             "You chose death !",
             "I don't know.",
             "Prout",
             "Family."
+        ]
+    },
+    "Iintro": {
+        "text": "Welcome to The Guild !"
+    },
+    "QhasSaveFile": {
+        "text": "Do you wish to load a save file ?",
+        "choices": [
+            "Yes",
+            "No, start a new game."
+        ]
+    },
+    "EfileName": {
+        "text": "Enter the name of your save file :"
+    },
+    "NdepositGold": {
+        "text": "How much gold do you want to deposit to your guild's treasury ?"
+    },
+    "IfileSearchError": {
+        "text": "Unable to find save file."
+    },
+    "IfileLoadError": {
+        "text": "Error loading save file. Starting a new game."
+    },
+    "InoStandardSaveFile": {
+        "text": "No standard save file found. Retrying..."
+    },
+    "QquitGame": {
+        "text": "Do you wish to quit the game ?",
+        "choices": [
+            "Quit",
+            "Cancel"
         ]
     }
 }

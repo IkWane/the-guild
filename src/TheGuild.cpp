@@ -5,9 +5,10 @@ TheGuild::TheGuild()
     gold = STARTER_GOLD;
 }
 
-TheGuild::TheGuild(const char *path)
+TheGuild::TheGuild(std::string &path)
 {
-    std::ifstream file(path);
+    std::ifstream file(path.c_str());
+    assert(!file.fail() && "Failed to open guild save file.");
     nlohmann::json jsonGuild;
     file >> jsonGuild;
     gold = jsonGuild["gold"].get<int>();
