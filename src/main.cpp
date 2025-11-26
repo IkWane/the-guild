@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <conio.h>
 #include <math.h>
 #include "gameUtil.hpp"
 #include "FileManager.hpp"
@@ -10,8 +9,13 @@
 int main()
 {
     RNG::get(0);
+    WINDOW *window = initscr();
 
-    nlohmann::json dialogs = FileManager::loadJson("dialogs.json");
+    cbreak();
+    noecho();
+    scrollok(window, TRUE);
+    
+    nlohmann::json dialogs = FileManager::loadJson("data/dialogs.json");
 
     gameUtil::giveDialog(dialogs["Iintro"]);
     TheGuild guild;
@@ -59,6 +63,7 @@ int main()
                 int quitChoice = gameUtil::giveDialog(dialogs["QquitGame"]);
                 if (quitChoice == 0)
                 {
+                    endwin();
                     return 0;
                 }
             }
@@ -85,11 +90,12 @@ int main()
         guild = TheGuild();
     }
 
-    std::cout << "Current Guild gold: " << guild.gold << std::endl;
+    printw("Current Guild gold: %d\n", guild.gold);
     guild.gold += gameUtil::numberDialog(dialogs["NdepositGold"]);
-    std::cout << "Guild gold: " << guild.gold << std::endl;
+    printw("Guild gold: %d\n", guild.gold);
+    getch();
 
     guild.saveGuild(saveFileName.c_str());
-
+    endwin();
     return 0;
 }

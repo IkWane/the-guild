@@ -1,9 +1,9 @@
 #pragma once
 
-#define KEY_UP    72
-#define KEY_DOWN  80
-#define KEY_LEFT  75
-#define KEY_RIGHT 77
-#define KEY_ENTER 13
-#define KEY_ESCAPE 27
+#define DEFAULT_KEY_UP    65
+#define DEFAULT_KEY_DOWN  66
+#define DEFAULT_KEY_LEFT  68
+#define DEFAULT_KEY_RIGHT 67
+#define DEFAULT_KEY_ENTER 10
+#define DEFAULT_KEY_ESCAPE 27
 #define STARTER_GOLD 100

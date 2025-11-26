@@ -1,5 +1,7 @@
+#pragma once
 #include "magicNumbers.hpp"
 #include "json.hpp"
+#include <ncurses.h>
 #include <RNG.hpp>
 
 namespace gameUtil
@@ -13,6 +15,27 @@ namespace gameUtil
         return a;  
     }
 
+    std::string readStr()
+    {
+        std::string input;
+
+        nocbreak();
+        echo();
+
+        int ch = getch();
+
+        while (ch != '\n')
+        {
+            input.push_back(ch);
+            ch = getch();
+        }
+
+        cbreak();
+        echo();
+        
+        return input;
+    }
+
     int chooseOption(int optionsLen, std::string options[], int defaultChoice = 0)
     {
         int previous_selected = -1;
@@ -22,61 +45,62 @@ namespace gameUtil
             if (previous_selected != selected)
             {
                 previous_selected = selected;
-                std::cout << "\r";
+                printw("\r");
                 for (int i = 0; i < optionsLen; i++)
                 {
                     if (selected == i)
                     {
-                        std::cout << " > " << options[i] << " < ";
+                        printw(" > %s < ", options[i].c_str());
                     }
                     else
                     {
-                        std::cout << "   " << options[i] << "   ";
+                        printw("   %s   ", options[i].c_str());
                     }
                 }
-                std::cout << std::flush;
+                refresh();
             }
 
             int key = getch();
-            if (key == 224)
+            if (key == 27 && getch() == 91)
             {
                 key = getch();
                 switch (key)
                 {
-                    case KEY_LEFT:
+                    case DEFAULT_KEY_LEFT:
                         selected -= 1;
                         selected = wrapAround(selected, optionsLen);
                         break;
-                    case KEY_RIGHT:
+                    case DEFAULT_KEY_RIGHT:
                         selected += 1;
                         selected = wrapAround(selected, optionsLen);
                         break;
                     default:
                         break;
                 }
-            } 
-            else if (key == KEY_ENTER)
+            }
+            else if (key == DEFAULT_KEY_ENTER)
             {
                 break;
             }
-            else if (key == KEY_ESCAPE)
+            else if (key == DEFAULT_KEY_ESCAPE)
             {
                 selected = -1;
                 break;
             }
         }
 
-        std::cout << "\r";
+        printw("\r");
         for (int i = 0; i < optionsLen; i++)
         {
-            std::cout << "   ";
+            printw("   ");
             for (int j = 0; j < options[i].length(); j++)
             {
-                std::cout << " ";
+                printw(" ");
             }
-            std::cout << "   ";
+            printw("   ");
         }
-        std::cout << "\r" << std::flush;
+        printw("\r");
+        refresh();
         
         return selected;
     }
@@ -91,32 +115,32 @@ namespace gameUtil
             if (previous_selected != selected)
             {
                 previous_selected = selected;
-                std::cout << "\r";
+                printw("\r");
                 for (int i = 0; i < options.size(); i++)
                 {
                     if (selected == i)
                     {
-                        std::cout << " > " << options.at(i).get<std::string>() << " < ";
+                        printw(" > %s < ", options.at(i).get<std::string>().c_str());
                     }
                     else
                     {
-                        std::cout << "   " << options.at(i).get<std::string>() << "   ";
+                        printw("   %s   ", options.at(i).get<std::string>().c_str());
                     }
                 }
-                std::cout << std::flush;
+                refresh();
             }
 
             int key = getch();
-            if (key == 224)
+            if (key == 27 && getch() == 91)
             {
                 key = getch();
                 switch (key)
                 {
-                    case KEY_LEFT:
+                    case DEFAULT_KEY_LEFT:
                         selected -= 1;
                         selected = wrapAround(selected, options.size());
                         break;
-                    case KEY_RIGHT:
+                    case DEFAULT_KEY_RIGHT:
                         selected += 1;
                         selected = wrapAround(selected, options.size());
                         break;
@@ -124,29 +148,30 @@ namespace gameUtil
                         break;
                 }
             } 
-            else if (key == KEY_ENTER)
+            else if (key == DEFAULT_KEY_ENTER)
             {
                 break;
             }
-            else if (key == KEY_ESCAPE)
+            else if (key == DEFAULT_KEY_ESCAPE)
             {
                 selected = -1;
                 break;
             }
         }
 
-        std::cout << "\r";
+        printw("\r");
         for (auto& param : options.items())
         {
-            std::cout << "   ";
+            printw("   ");
             std::string e = param.value().get<std::string>();
             for (int j = 0; j < e.length(); j++)
             {
-                std::cout << " ";
+                printw(" ");
             }
-            std::cout << "   ";
+            printw("   ");
         }
-        std::cout << "\r" << std::flush;
+        printw("\r");
+        refresh();
         
         return selected;
     }
@@ -155,7 +180,7 @@ namespace gameUtil
     {
         if (dialog.contains("text"))
         {
-            std::cout << dialog["text"].get<std::string>() << std::endl;
+            printw("%s\n", dialog["text"].get<std::string>().c_str());
         }
         if (dialog.contains("choices"))
         {
@@ -171,7 +196,7 @@ namespace gameUtil
 
     int numberDialog(nlohmann::json dialog)
     {
-        std::cout << dialog["text"].get<std::string>() << std::endl;
+        printw("%s\n", dialog["text"].get<std::string>().c_str());
         std::string list[] = {"<<<", "<<", "<", "", ">", ">>", ">>>"};
         int selected = 0;
         int number = 0;
@@ -217,9 +242,8 @@ namespace gameUtil
 
     std::string textEntryDialog(nlohmann::json dialog)
     {
-        std::cout << dialog["text"].get<std::string>() << std::endl;
-        std::string input;
-        std::getline(std::cin, input);
+        printw("%s\n", dialog["text"].get<std::string>().c_str());
+        std::string input = readStr();
         return input;
     }
 
