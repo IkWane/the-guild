@@ -9,6 +9,6 @@ public:
     ~Adventurer();
     std::string name;
     int hunger;
-    std::string favoredTerrains[];
-    std::string favoredEnemies[];
+//    std::string favoredTerrains[];
+//    std::string favoredEnemies[];
 };

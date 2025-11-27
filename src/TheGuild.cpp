@@ -32,7 +32,7 @@ void TheGuild::saveGuild(const char *path)
     {
         nlohmann::json jsonAdv;
         jsonAdv["name"] = adv.name;
-        jsonAdv["healthPoints"] = adv.healthPoints;
+        jsonAdv["healthPoints"] = adv.hunger;
         jsonGuild["adventurers"].push_back(jsonAdv);
     }
     file << jsonGuild;
