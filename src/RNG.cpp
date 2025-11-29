@@ -1,5 +1,4 @@
 #include "RNG.hpp"
-#include <iostream>
 
 RNG::RNG(unsigned int seed)
 {
@@ -13,3 +12,9 @@ int RNG::uniformInt(int min, int max)
     return distrib(generator);
 }
 
+// int RNG::weightedInt(int min, int max, float weights[])
+// {
+
+//     std::piecewise_constant_distribution<> dist();
+//     return 0;
+// }
