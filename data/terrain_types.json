@@ -1,0 +1,14 @@
+[
+    {
+        "name":"Swamp",
+        "temperature": 3,
+        "humidity": 4,
+        "plant_density": 3,
+        "fauna_hostility": 3,
+        "visibility": 2,
+        "tags": [
+            "insect",
+            "disease"
+        ]
+    }
+]
