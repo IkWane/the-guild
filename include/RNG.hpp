@@ -2,6 +2,8 @@
 #include <random>
 #include <climits>
 #include <iostream>
+#include <string>
+#include <vector>
 
 class RNG 
 {
@@ -12,7 +14,7 @@ public:
         return instance;
     }
     int uniformInt(int min, int max);
-    // int weightedInt(int min, int max, float weights[]);
+    int weightedInt(int min, int max, std::vector<int> weights);
 private:
     explicit RNG(unsigned int seed);
     std::mt19937 generator;

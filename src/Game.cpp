@@ -10,6 +10,10 @@ Game::Game()
     scrollok(window, TRUE);
     
     dialogs = FileManager::loadJson("data/dialogs.json");
+    classes = FileManager::loadJson("data/classes.json");
+    adventurer_modifiers = FileManager::loadJson("data/adventurer_modifiers.json");
+    races = FileManager::loadJson("data/races.json");
+    terrain_types = FileManager::loadJson("data/terrain_types.json");
 
     gameUtil::giveDialog(dialogs["Iintro"]);
 

@@ -1,0 +1,29 @@
+This is a text file showing the different json formats used in this project
+
+rarity is low == less likely (weighted random)
+weaknesses and tags are snake_case
+
+adventurer_modifiers :
+{
+    "name":"name",
+    "rarity":0,
+    "strength":0,
+    "durability":0,
+    "agility":0,
+    "wisdom":0,
+    "magic":0,
+    "weaknesses": [
+        
+    ]
+}
+
+classes :
+{
+    "name":"name",
+    "rarity":0
+    "strength":0,
+    "durability":0,
+    "agility":0,
+    "wisdom":0,
+    "magic":0
+}

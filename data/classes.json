@@ -4,15 +4,13 @@
         "strength":20,
         "durability":50,
         "agility":5,
-        "wisdom":6,
-        "magic":0
+        "wisdom":6
     },
     {
         "name":"Swordsman",
         "strength":20,
         "durability":50,
         "agility":5,
-        "wisdom":6,
-        "magic":0
+        "wisdom":6
     }
 ]

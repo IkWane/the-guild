@@ -1,21 +1,6 @@
 [
     {
-        "name":"null",
-        "rarity":10,
-        "strength":0,
-        "durability":0,
-        "agility":0,
-        "wisdom":0,
-        "magic":0,
-        "weaknesses": [
-
-        ]
-    },
-    {
-        "name":"Dumb",
-        "strength":0,
-        "durability":0,
-        "agility":0,
+        "name":"dumb",
         "wisdom":-20,
         "magic":-5,
         "weaknesses": [
@@ -25,35 +10,26 @@
         ]
     },
     {
-        "name":"Entomophobic",
-        "strength":0,
-        "durability":0,
-        "agility":0,
+        "name":"entomophobic",
         "wisdom":-3,
-        "magic":0,
         "weaknesses": [
             "insect",
             "arachnid"
         ]
     },
     {
-        "name":"Arachnophobic",
-        "strength":0,
-        "durability":0,
-        "agility":0,
+        "name":"arachnophobic",
         "wisdom":-2,
-        "magic":0,
         "weaknesses": [
             "arachnid"
         ]
     },
     {
-        "name":"Feeble",
+        "name":"feeble",
         "strength":-10,
         "durability":-15,
         "agility":-3,
         "wisdom":2,
-        "magic":0,
         "weaknesses": [
             "desease",
             "height"
