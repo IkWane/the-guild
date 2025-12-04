@@ -1,29 +1,16 @@
 This is a text file showing the different json formats used in this project
 
+characteristics :
 rarity is low == less likely (weighted random)
-weaknesses and tags are snake_case
+tags are snake_case
+stats are integers :
+strength
+agility
+fortitude
+willpower
+perception
+wisdom
+magic
 
-adventurer_modifiers :
-{
-    "name":"name",
-    "rarity":0,
-    "strength":0,
-    "durability":0,
-    "agility":0,
-    "wisdom":0,
-    "magic":0,
-    "weaknesses": [
-        
-    ]
-}
-
-classes :
-{
-    "name":"name",
-    "rarity":0
-    "strength":0,
-    "durability":0,
-    "agility":0,
-    "wisdom":0,
-    "magic":0
-}
+dialogs:
+prefixes: Q = multi-choice question, I = information, E = text entry, N = number entry, Test = for testing purposes

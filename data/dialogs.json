@@ -1,5 +1,5 @@
 {
-    "_comment": "This is a JSON file containing dialogs for The Guild game. prefixes: Q = multi-choice question, I = information, E = text entry, N = number entry, Test = for testing purposes",
+    "_comment": "This is a JSON file containing the dialogs. prefixes: Q = multi-choice question, I = information, E = text entry, N = number entry, Test = for testing purposes",
     "Test": {
         "text" : "How many chickens ?",
         "choices": [
