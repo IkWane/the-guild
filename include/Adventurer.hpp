@@ -1,13 +1,14 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "json.hpp"
 
 class Adventurer
 {
 public:
     Adventurer(std::string name, int hunger)
         : name(name), hunger(hunger) {};
-    ~Adventurer();
+    Adventurer(nlohmann::json json);
     std::string name;
     int hunger;
     std::vector<std::string> weaknesses;
