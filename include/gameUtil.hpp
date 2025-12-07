@@ -10,15 +10,7 @@ namespace gameUtil
 
     std::string readStr();
 
-    int chooseOption(int optionsLen, std::string options[], int defaultChoice = 0);
+    int chooseOption(int optionsLen, std::string options[], int defaultChoice = 0, bool giveResult = false);
 
-    int chooseOption(nlohmann::json options, int defaultChoice = 0);
-
-    int giveDialog(nlohmann::json dialog);
-
-    int numberDialog(nlohmann::json dialog);
-
-    std::string textEntryDialog(nlohmann::json dialog);
-
-    int getDiceRoll(int max);
+    int chooseOption(nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
 } // namespace gameUtil

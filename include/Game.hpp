@@ -11,6 +11,11 @@ class Game {
 public:
     Game();
     int run();
+    int giveDialog(const char *dialogName);
+    int numberDialog(const char *dialogName);
+    std::string textEntryDialog(const char *dialogName);
+    int getDiceRoll(int max);
+    void exitGame();
     ~Game();
 private:
     WINDOW *window;

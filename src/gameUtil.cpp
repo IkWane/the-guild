@@ -31,7 +31,7 @@ std::string gameUtil::readStr()
     return input;
 }
 
-int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultChoice)
+int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultChoice, bool giveResult)
 {
     int previous_selected = -1;
     int selected = defaultChoice;
@@ -56,7 +56,7 @@ int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultCho
         }
 
         int key = getch();
-        if (key == 27 && getch() == 91)
+        if (key == DEFAULT_KEY_ESCAPE && getch() == DEFAULT_KEY_ARROW_PREFIX)
         {
             key = getch();
             switch (key)
@@ -84,23 +84,22 @@ int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultCho
         }
     }
 
-    printw("\r");
-    for (int i = 0; i < optionsLen; i++)
+    int x, y;
+    getyx(stdscr, y, x);
+    move(y, 0);
+    clrtoeol();
+    if (giveResult && selected != -1)
     {
-        printw("   ");
-        for (int j = 0; j < options[i].length(); j++)
-        {
-            printw(" ");
-        }
-        printw("   ");
+        printw("> %s", options[selected].c_str());
+        move(y+1, 0);
     }
-    printw("\r");
+
     refresh();
     
     return selected;
 }
 
-int gameUtil::chooseOption(nlohmann::json options, int defaultChoice)
+int gameUtil::chooseOption(nlohmann::json options, int defaultChoice, bool giveResult)
 {
     int previous_selected = -1;
     int selected = defaultChoice;
@@ -115,18 +114,18 @@ int gameUtil::chooseOption(nlohmann::json options, int defaultChoice)
             {
                 if (selected == i)
                 {
-                    printw(" > %s < ", options.at(i).get<std::string>().c_str());
+                    printw(" > %s < ", options[i].get<std::string>().c_str());
                 }
                 else
                 {
-                    printw("   %s   ", options.at(i).get<std::string>().c_str());
+                    printw("   %s   ", options[i].get<std::string>().c_str());
                 }
             }
             refresh();
         }
 
         int key = getch();
-        if (key == 27 && getch() == 91)
+        if (key == DEFAULT_KEY_ESCAPE && getch() == DEFAULT_KEY_ARROW_PREFIX)
         {
             key = getch();
             switch (key)
@@ -154,95 +153,16 @@ int gameUtil::chooseOption(nlohmann::json options, int defaultChoice)
         }
     }
 
-    printw("\r");
-    for (auto& param : options.items())
+    int x, y;
+    getyx(stdscr, y, x);
+    move(y, 0);
+    clrtoeol();
+    if (giveResult && selected != -1)
     {
-        printw("   ");
-        std::string e = param.value().get<std::string>();
-        for (int j = 0; j < e.length(); j++)
-        {
-            printw(" ");
-        }
-        printw("   ");
+        printw("> %s", options[selected].get<std::string>().c_str());
+        move(y+1, 0);
     }
-    printw("\r");
     refresh();
     
     return selected;
-}
-
-int gameUtil::giveDialog(nlohmann::json dialog)
-{
-    if (dialog.contains("text"))
-    {
-        printw("%s\n", dialog["text"].get<std::string>().c_str());
-    }
-    if (dialog.contains("choices"))
-    {
-        if (dialog.contains("defaultChoice"))
-        {
-            return chooseOption(dialog["choices"], dialog["defaultChoice"].get<int>());
-        }
-        
-        return chooseOption(dialog["choices"]);
-    }     
-    return -1;
-}
-
-int gameUtil::numberDialog(nlohmann::json dialog)
-{
-    printw("%s\n", dialog["text"].get<std::string>().c_str());
-    std::string list[] = {"<<<", "<<", "<", "", ">", ">>", ">>>"};
-    int selected = 0;
-    int number = 0;
-    while (selected != 3)
-    {
-        list[3] = std::to_string(number);
-        selected = chooseOption(7, list, selected);
-        switch (selected)
-        {
-        case -1:
-            selected = 0;
-            break;
-        case 0:
-            number -= 100;
-            break;
-
-        case 1:
-            number -= 10;
-            break;
-        
-        case 2:
-            number -= 1;
-            break;
-        
-        case 4:
-            number += 1;
-            break;
-        
-        case 5:
-            number += 10;
-            break;
-        
-        case 6:
-            number += 100;
-            break;
-        
-        default:
-            break;
-        }
-    }
-    return number;
-}
-
-std::string gameUtil::textEntryDialog(nlohmann::json dialog)
-{
-    printw("%s\n", dialog["text"].get<std::string>().c_str());
-    std::string input = readStr();
-    return input;
-}
-
-int gameUtil::getDiceRoll(int max)
-{
-    return RNG::get().uniformInt(1, max);
 }

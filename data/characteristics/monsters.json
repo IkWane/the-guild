@@ -1,0 +1,66 @@
+[
+    {
+        "name": "goblin",
+        "strength": 8,
+        "threat": 0,
+        "agility": 12,
+        "intelligence": 7,
+        "wisdom": 5,
+        "perception": 10,
+        "fortitude": 5,
+        "weaknesses": [
+            "fire",
+            "cold",
+            "light",
+            "blunt"
+        ],
+        "strengths": [
+            "weapons",
+            "swarm",
+            "sneaky",
+            "bite"
+        ]
+    },
+    {
+        "name": "giant spider",
+        "threat": 1,
+        "strength": 5,
+        "agility": 15,
+        "intelligence": 6,
+        "wisdom": 6,
+        "perception": 20,
+        "fortitude": 8,
+        "weaknesses": [
+            "fire",
+            "light",
+            "cold"
+        ],
+        "strengths": [
+            "poison",
+            "trap",
+            "bite",
+            "sneaky"
+        ]
+    },
+    {
+        "name": "hobgoblin",
+        "threat": 2,
+        "strength": 15,
+        "agility": 13,
+        "intelligence": 12,
+        "wisdom": 7,
+        "perception": 12,
+        "fortitude": 9,
+        "weaknesses": [
+            "fire",
+            "light",
+            "cold"
+        ],
+        "strengths": [
+            "weapons",
+            "tools",
+            "berserk",
+            "club"
+        ]
+    }
+]
