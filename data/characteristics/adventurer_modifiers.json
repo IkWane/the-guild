@@ -1,7 +1,6 @@
-[
-    {
-        "name":"dumb",
-        "rarity":3,
+{
+    "dumb": {
+        "weight":3,
         "perception":-10,
         "wisdom":-20,
         "magic":-5,
@@ -13,26 +12,23 @@
             "trap"
         ]
     },
-    {
-        "name":"entomophobic",
-        "rarity":30,
+    "entomophobic": {
+        "weight":30,
         "wisdom":-3,
         "weaknesses": [
             "insect",
             "arachnid"
         ]
     },
-    {
-        "name":"arachnophobic",
-        "rarity":35,
+    "arachnophobic": {
+        "weight":35,
         "wisdom":-2,
         "weaknesses": [
             "arachnid"
         ]
     },
-    {
-        "name":"feeble",
-        "rarity":33,
+    "feeble": {
+        "weight":33,
         "perception":2,
         "strength":-10,
         "fortitude":-15,
@@ -43,25 +39,22 @@
             "height"
         ]
     },
-    {
-        "name":"hydrophobic",
-        "rarity":15,
+    "hydrophobic": {
+        "weight":15,
         "fortitude":-3,
         "weaknesses":[
             "water",
             "humid"
         ]
     },
-    {
-        "name":"leg_crippled",
-        "rarity":100,
+    "leg_crippled": {
+        "weight":100,
         "agility":-20,
         "strength":5
     },
-    {
-        "name":"arm_crippled",
-        "rarity":100,
+    "arm_crippled": {
+        "weight":100,
         "strength":-20,
         "agility":-5
     }
-]
+}

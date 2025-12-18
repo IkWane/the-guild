@@ -1,6 +1,5 @@
-[
-    {
-        "name": "goblin",
+{
+    "goblin": {
         "strength": 8,
         "threat": 0,
         "agility": 12,
@@ -21,8 +20,7 @@
             "bite"
         ]
     },
-    {
-        "name": "giant spider",
+    "giant spider" :{
         "threat": 1,
         "strength": 5,
         "agility": 15,
@@ -42,8 +40,7 @@
             "sneaky"
         ]
     },
-    {
-        "name": "hobgoblin",
+    "hobgoblin": {
         "threat": 2,
         "strength": 15,
         "agility": 13,
@@ -60,7 +57,7 @@
             "weapons",
             "tools",
             "berserk",
-            "club"
+            "blunt"
         ]
     }
-]
+}

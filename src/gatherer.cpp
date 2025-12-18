@@ -11,18 +11,18 @@ int main()
         if (path.ends_with(".json"))
         {
             nlohmann::json json_file = FileManager::loadJson(path);
-            for (nlohmann::json json : json_file)
+            for (auto it : json_file.items())
             {
-                if (json.contains("weaknesses"))
+                if (it.value().contains("weaknesses"))
                 {
-                    for (std::string tag : json["weaknesses"])
+                    for (std::string tag : it.value()["weaknesses"])
                     {
                         tag_map[tag] += 1;
                     }
                 }
-                if (json.contains("strengths"))
+                if (it.value().contains("strengths"))
                 {
-                    for (std::string tag : json["strengths"])
+                    for (std::string tag : it.value()["strengths"])
                     {
                         tag_map[tag] += 1;
                     }

@@ -166,3 +166,39 @@ int gameUtil::chooseOption(nlohmann::json options, int defaultChoice, bool giveR
     
     return selected;
 }
+
+std::string gameUtil::intToRank(int rank)
+{
+    switch (rank)
+    {
+    case 0:
+        return "F";
+    
+    case 1:
+        return "E";
+    
+    case 2:
+        return "D";
+    
+    case 3:
+        return "C";
+    
+    case 4:
+        return "B";
+    
+    case 5:
+        return "A";
+    
+    case 6:
+        return "S";
+    
+    case 7:
+        return "SS";
+    
+    case 8:
+        return "SSS";
+    
+    default:
+        return "???";
+    }
+}

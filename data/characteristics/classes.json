@@ -1,18 +1,16 @@
-[
-    {
-        "name":"Tank",
+{
+    "Tank": {
         "strength":30,
         "perception":17,
         "fortitude":50,
         "agility":5,
         "wisdom":6
     },
-    {
-        "name":"Swordsman",
+    "Swordsman": {
         "strength":20,
         "perception":25,
         "fortitude":50,
         "agility":5,
         "wisdom":6
     }
-]
+}

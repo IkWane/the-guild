@@ -14,6 +14,7 @@ Game::Game()
     adventurer_modifiers = FileManager::loadJson("data/characteristics/adventurer_modifiers.json");
     races = FileManager::loadJson("data/characteristics/races.json");
     terrain_types = FileManager::loadJson("data/characteristics/terrain_types.json");
+    monsters = FileManager::loadJson("data/characteristics/monsters.json");
 
     giveDialog("Iintro");
 
@@ -59,7 +60,7 @@ Game::Game()
                 int quitChoice = giveDialog("QquitGame");
                 if (quitChoice == 0)
                 {
-                    exitGame();
+                    exitGame(false);
                 }
             }
             break;
@@ -189,8 +190,12 @@ int Game::getDiceRoll(int max)
     return RNG::get().uniformInt(1, max);
 }
 
-void Game::exitGame()
+void Game::exitGame(bool save)
 {
+    if (save)
+    {
+        guild.saveGuild(saveFileName.c_str());
+    }
     endwin();
     std::exit(0);
 }

@@ -13,4 +13,6 @@ namespace gameUtil
     int chooseOption(int optionsLen, std::string options[], int defaultChoice = 0, bool giveResult = false);
 
     int chooseOption(nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
+
+    std::string intToRank(int rank);
 } // namespace gameUtil
