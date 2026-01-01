@@ -1,3 +1,11 @@
-[
-    
-]
+{
+    "Human": {
+        "strength":5,
+        "agility":5,
+        "fortitude":5,
+        "willpower":4,
+        "perception":4,
+        "wisdom":3,
+        "magic":2
+    }
+}

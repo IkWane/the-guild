@@ -35,12 +35,15 @@ int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultCho
 {
     int previous_selected = -1;
     int selected = defaultChoice;
+    int x, y;
+    getyx(stdscr, y, x);
     while (true)
     {
         if (previous_selected != selected)
         {
             previous_selected = selected;
-            printw("\r");
+            move(y, 0);
+            clrtoeol();
             for (int i = 0; i < optionsLen; i++)
             {
                 if (selected == i)
@@ -83,9 +86,6 @@ int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultCho
             break;
         }
     }
-
-    int x, y;
-    getyx(stdscr, y, x);
     move(y, 0);
     clrtoeol();
     if (giveResult && selected != -1)
@@ -167,6 +167,8 @@ int gameUtil::chooseOption(nlohmann::json options, int defaultChoice, bool giveR
     return selected;
 }
 
+
+
 std::string gameUtil::intToRank(int rank)
 {
     switch (rank)
@@ -201,4 +203,21 @@ std::string gameUtil::intToRank(int rank)
     default:
         return "???";
     }
+}
+
+std::string gameUtil::snakeToNormal(std::string &str)
+{
+    std::string newStr = "";
+    for (auto &c : str)
+    {
+        if (c == '_')
+        {
+            newStr += ' ';
+        } 
+        else 
+        {
+            newStr += c;
+        }
+    }
+    
 }

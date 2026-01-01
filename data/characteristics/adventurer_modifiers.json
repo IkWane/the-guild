@@ -1,5 +1,6 @@
 {
     "dumb": {
+        "benefit":-1,
         "weight":3,
         "perception":-10,
         "wisdom":-20,
@@ -13,21 +14,27 @@
         ]
     },
     "entomophobic": {
+        "benefit":-1,
         "weight":30,
         "wisdom":-3,
         "weaknesses": [
+            "insect",
             "insect",
             "arachnid"
         ]
     },
     "arachnophobic": {
+        "benefit":-1,
         "weight":35,
         "wisdom":-2,
         "weaknesses": [
+            "arachnid",
+            "arachnid",
             "arachnid"
         ]
     },
     "feeble": {
+        "benefit":-1,
         "weight":33,
         "perception":2,
         "strength":-10,
@@ -40,21 +47,45 @@
         ]
     },
     "hydrophobic": {
+        "benefit":-1,
         "weight":15,
         "fortitude":-3,
         "weaknesses":[
             "water",
+            "water",
+            "water",
+            "water",
+            "humid",
+            "humid",
             "humid"
         ]
     },
     "leg_crippled": {
+        "benefit":-1,
         "weight":100,
         "agility":-20,
-        "strength":5
+        "strength":-5
     },
     "arm_crippled": {
+        "benefit":-1,
         "weight":100,
         "strength":-20,
         "agility":-5
+    },
+    "strong": {
+        "benefit":1,
+        "weight":20,
+        "strenth":10,
+        "agility":5
+    },
+    "very_strong": {
+        "benefit":1,
+        "weight":5,
+        "strength":40,
+        "agility":10,
+        "strengths":[
+            "blunt",
+            "pierce"
+        ]
     }
 }

@@ -7,7 +7,8 @@ class Adventurer
 {
 public:
     Adventurer(std::string name, int hunger): 
-        name(name), 
+        name(name),
+        level(0),
         hunger(hunger), 
         strength(0), 
         agility(0), 
@@ -15,11 +16,17 @@ public:
         willpower(0), 
         perception(0), 
         wisdom(0), 
-        magic(0) 
+        magic(0),
+        strengths(std::vector<std::string>()),
+        weaknesses(std::vector<std::string>()),
+        modifiers(std::vector<std::string>())
         {};
     Adventurer(nlohmann::json json);
+    void resetStats();
+    void updateLevel();
     nlohmann::json toJson();
     std::string name;
+    int level;
     int hunger;
     int strength;
     int agility;
@@ -30,4 +37,7 @@ public:
     int magic;
     std::vector<std::string> weaknesses;
     std::vector<std::string> strengths;
+    std::vector<std::string> modifiers;
+    std::string gameClass;
+    std::string race;
 };

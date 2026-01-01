@@ -14,5 +14,5 @@ namespace gameUtil
 
     int chooseOption(nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
 
-    std::string intToRank(int rank);
+    std::string snakeToNormal(std::string &str);
 } // namespace gameUtil

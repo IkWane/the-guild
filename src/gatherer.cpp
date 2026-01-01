@@ -11,7 +11,7 @@ int main()
         if (path.ends_with(".json"))
         {
             nlohmann::json json_file = FileManager::loadJson(path);
-            for (auto it : json_file.items())
+            for (auto &it : json_file.items())
             {
                 if (it.value().contains("weaknesses"))
                 {

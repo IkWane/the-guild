@@ -1,5 +1,6 @@
 {
     "Tank": {
+        "weight":100,
         "strength":30,
         "perception":17,
         "fortitude":50,
@@ -7,6 +8,7 @@
         "wisdom":6
     },
     "Swordsman": {
+        "weight":100,
         "strength":20,
         "perception":25,
         "fortitude":50,

@@ -1,0 +1,9 @@
+{
+    "dialogs_file":"data/dialogs.json",
+    "classes_file":"data/characteristics/classes.json",
+    "adventurer_modifiers_file":"data/characteristics/adventurer_modifiers.json",
+    "adventurer_names_file":"data/characteristics/adventurer_names.json",
+    "races_file":"data/characteristics/races.json",
+    "terrain_types_file":"data/characteristics/terrain_types.json",
+    "monsters_file":"data/characteristics/monsters.json"
+}

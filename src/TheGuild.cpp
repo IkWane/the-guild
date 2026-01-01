@@ -3,6 +3,8 @@
 TheGuild::TheGuild()
 {
     gold = STARTER_GOLD;
+    adventurers = std::vector<Adventurer>();
+    missions = std::vector<Mission>();
 }
 
 TheGuild::TheGuild(std::string &path)
@@ -12,23 +14,17 @@ TheGuild::TheGuild(std::string &path)
     nlohmann::json jsonGuild;
     file >> jsonGuild;
     gold = jsonGuild["gold"].get<int>();
-    for (nlohmann::json jsonAdv : jsonGuild["adventurers"])
+    for (nlohmann::json &jsonAdv : jsonGuild["adventurers"])
     {
-        Adventurer adv(
-            jsonAdv["name"].get<std::string>(),
-            jsonAdv["healthPoints"].get<int>()
-        );
-        adv.strength = jsonAdv["strength"].get<int>();
-        adv.agility = jsonAdv["agility"].get<int>();
-        adv.fortitude = jsonAdv["fortitude"].get<int>();
-        adv.willpower = jsonAdv["willpower"].get<int>();
-        adv.perception = jsonAdv["perception"].get<int>();
-        adv.wisdom = jsonAdv["wisdom"].get<int>();
-        adv.magic = jsonAdv["magic"].get<int>();
-        adv.weaknesses = jsonAdv["weaknesses"].get<std::vector<std::string>>();
-        adv.strengths = jsonAdv["strengths"].get<std::vector<std::string>>();
+        Adventurer adv(jsonAdv);
         adventurers.push_back(adv);
     }
+    for (auto &jsonMission : jsonGuild["missions"])
+    {
+        Mission mission(jsonMission);
+        missions.push_back(mission);
+    }
+    
 }
 
 void TheGuild::saveGuild(const char *path)
@@ -42,6 +38,13 @@ void TheGuild::saveGuild(const char *path)
         nlohmann::json jsonAdv = adv.toJson();
         jsonGuild["adventurers"].push_back(jsonAdv);
     }
-    file << jsonGuild;
+    jsonGuild["missions"] = nlohmann::json::array();
+    for (auto &mission : missions)
+    {
+        nlohmann::json jsonMission = mission.toJson();
+        jsonGuild["missions"].push_back(jsonMission);
+    }
+    
+    file << jsonGuild.dump();
     file.close();
 }

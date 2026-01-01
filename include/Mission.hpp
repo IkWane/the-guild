@@ -6,11 +6,11 @@ class Mission
 {
 public:
     Mission(std::string description):
-        description(description), monsters(std::vector<std::string>()), terrainType("None"), rank(0) {};
+        description(description), monsters(std::map<std::string, int>()), terrainType("None"), rank(0) {};
     Mission(nlohmann::json json);
-    std::string toJson();
+    nlohmann::json toJson();
     std::string description;
-    std::vector<std::string> monsters;
+    std::map<std::string, int> monsters;
     std::string terrainType;
     int rank;
 };

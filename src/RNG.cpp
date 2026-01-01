@@ -14,6 +14,7 @@ int RNG::uniformInt(int min, int max)
 int RNG::weightedInt(int min, int max, std::vector<int> weights)
 {
     int len = max - min + 1;
+    
     std::vector<int> values(len);
     for (int i = 0; i < len; i++)
     {
