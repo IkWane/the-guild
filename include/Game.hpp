@@ -29,10 +29,14 @@ private:
     std::vector<std::string> adventurer_modifiers_keys;
     std::vector<int> adventurer_modifiers_weights;
     nlohmann::json races;
+    std::vector<std::string> races_keys;
+    std::vector<int> races_weights;
     nlohmann::json classes;
     std::vector<std::string> classes_keys;
     std::vector<int> classes_weights;
     nlohmann::json terrain_types;
+    std::vector<std::string> terrain_types_keys;
+    std::vector<int> terrain_types_weights;
     nlohmann::json monsters;
     std::vector<std::string> monsters_keys;
     std::vector<int> monsters_levels;

@@ -21,7 +21,9 @@ std::string FileManager::loadFile(std::string &path)
 nlohmann::json FileManager::loadJson(const char *path)
 {
     std::string fileContent = loadFile(path);
+    std::cout << path << std::endl;
     nlohmann::json result = nlohmann::json::parse(fileContent);
+    std::cout << "test" << std::endl;
     return result;
 }
 

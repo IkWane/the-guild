@@ -1,10 +1,12 @@
 {
     "None": {
+        "weight":0,
         "fauna_hostility":0,
         "visibility":0,
         "tags": []
     },
     "swamp": {
+        "weight":100,
         "fauna_hostility": 3,
         "visibility": 2,
         "tags": [

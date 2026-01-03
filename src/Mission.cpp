@@ -3,9 +3,9 @@
 Mission::Mission(nlohmann::json json)
 {
     description = json["description"].get<std::string>();
-    monsters = json["monsters"].get<std::vector<std::string>>();
+    monsters = json["monsters"].get<std::map<std::string, int>>();
     terrainType = json["terrain_type"].get<std::string>();
-    rank = json["rank"].get<int>();
+    level = json["level"].get<int>();
 }
 
 nlohmann::json Mission::toJson()
@@ -14,7 +14,7 @@ nlohmann::json Mission::toJson()
         {"description", description},
         {"monsters", monsters},
         {"terrain_type", terrainType},
-        {"rank", rank}
+        {"level", level}
     };
     return nlohmann::json(obj_values);
 }

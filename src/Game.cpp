@@ -10,38 +10,43 @@ Game::Game()
     cbreak();
     noecho();
     scrollok(window, TRUE);
-    
+
     nlohmann::json config = FileManager::loadJson("data/config.json");
 
     dialogs = FileManager::loadJson(config["dialogs_file"].get<std::string>().c_str());
-    classes = FileManager::loadJson(config["classes_file"].get<std::string>().c_str());
-    classes_weights = std::vector<int>();
-    classes_keys = std::vector<std::string>();
-    for (auto& [key, val] : classes.items())
-    {
-        classes_weights.push_back(val["weight"].get<int>());
-        classes_keys.push_back(key);
-    }
-    adventurer_modifiers = FileManager::loadJson(config["adventurer_modifiers_file"].get<std::string>().c_str());
-    adventurer_modifiers_weights = std::vector<int>();
-    adventurer_modifiers_keys = std::vector<std::string>();
-    for (auto& [key, val] : adventurer_modifiers.items())
-    {
-        adventurer_modifiers_weights.push_back(val["weight"].get<int>());
-        adventurer_modifiers_keys.push_back(key);
-    }
     adventurer_names = FileManager::loadJson(config["adventurer_names_file"].get<std::string>().c_str());
-    races = FileManager::loadJson(config["races_file"].get<std::string>().c_str());
-    terrain_types = FileManager::loadJson(config["terrain_types_file"].get<std::string>().c_str());
-    monsters = FileManager::loadJson(config["monsters_file"].get<std::string>().c_str());
-    monsters_levels = std::vector<int>();
-    monsters_keys = std::vector<std::string>();
-    for (auto& [key, val] : monsters.items())
-    {
-        monsters_levels.push_back(val["level"].get<int>());
-        monsters_keys.push_back(key);
-    }
-
+    gameUtil::loadJsonConfig(
+        config["classes_file"].get<std::string>(), 
+        classes, 
+        classes_keys, 
+        classes_weights
+    );
+    gameUtil::loadJsonConfig(
+        config["adventurer_modifiers_file"].get<std::string>(), 
+        adventurer_modifiers, 
+        adventurer_modifiers_keys, 
+        adventurer_modifiers_weights
+    );
+    gameUtil::loadJsonConfig(
+        config["races_file"].get<std::string>(), 
+        races, 
+        races_keys, 
+        races_weights
+    );
+    gameUtil::loadJsonConfig(
+        config["terrain_types_file"].get<std::string>(), 
+        terrain_types, 
+        terrain_types_keys, 
+        terrain_types_weights
+    );
+    gameUtil::loadJsonConfig(
+        config["monsters_file"].get<std::string>(), 
+        monsters, 
+        monsters_keys, 
+        monsters_levels
+    );
+    
+    
     giveDialog("Iintro");
 
     bool invalidFile = true;
@@ -277,6 +282,9 @@ Adventurer Game::newRandomAdventurer()
     }
 
     updateAdventurerStatus(adv);
+
+    adv.race = races_keys[rng.weightedInt(0, races.size()-1, races_weights)];
+    adv.gameClass = classes_keys[rng.weightedInt(0, classes.size()-1, classes_weights)];
     
     return adv;
 }
@@ -342,58 +350,63 @@ void Game::updateAdventurerFromJsonKey(Adventurer &adv, std::string &key, nlohma
     }
 }
 
+// Creates a mission with randomized parameter, found within the json config files
 Mission Game::newRandomMission(int level)
 {
     RNG &rng = RNG::get();
-    int current_level = 0;
-    std::map<std::string, int> mission_monsters = std::map<std::string, int>();
-    std::vector<std::string> mission_monsters_keys = std::vector<std::string>();
-    
-    while (current_level != level)
+    if (level >= 5)
     {
-        int rand = rng.weightedInt(0, monsters.size() - 1, monsters_levels);
-        if (current_level + monsters_levels[rand] < level)
-        {
-            std::string &key = monsters_keys[rand];
-            if (mission_monsters.contains(key))
-            {
-                mission_monsters[key] += 1;
-            }
-            else
-            {
-                mission_monsters_keys.push_back(key);
-                mission_monsters[key] = 1;
-            }
-            current_level += monsters_levels[rand];
-        }
-        else
-        {
-            int lowest_index = 0;
-            int lowest_value = abs(current_level + monsters_levels[0] - level);
-            for (int i = 1; i < monsters_levels.size(); i++)
-            {
-                int potential_lowest = abs(current_level + monsters_levels[lowest_index] - level);
-                if (potential_lowest < lowest_value)
-                {
-                    lowest_value = potential_lowest;
-                    lowest_index = i;
-                }
-            }
-            std::string &key = monsters_keys[lowest_index];
-            if (mission_monsters.contains(key))
-            {
-                mission_monsters[key] += 1;
-            }
-            else
-            {
-                mission_monsters_keys.push_back(key);
-                mission_monsters[key] = 1;
-            }
-            break;
-        }
+        int current_level = 0;
+        std::map<std::string, int> mission_monsters = std::map<std::string, int>();
+        std::vector<std::string> mission_monsters_keys = std::vector<std::string>();
         
+        while (current_level != level)
+        {
+            int rand = rng.weightedInt(0, monsters.size() - 1, monsters_levels);
+            if (current_level + monsters_levels[rand] < level)
+            {
+                std::string &key = monsters_keys[rand];
+                if (mission_monsters.contains(key))
+                {
+                    mission_monsters[key] += 1;
+                }
+                else
+                {
+                    mission_monsters_keys.push_back(key);
+                    mission_monsters[key] = 1;
+                }
+                current_level += monsters_levels[rand];
+            }
+            else
+            {
+                int lowest_index = 0;
+                int lowest_value = abs(current_level + monsters_levels[0] - level);
+                for (int i = 1; i < monsters_levels.size(); i++)
+                {
+                    int potential_lowest = abs(current_level + monsters_levels[lowest_index] - level);
+                    if (potential_lowest < lowest_value)
+                    {
+                        lowest_value = potential_lowest;
+                        lowest_index = i;
+                    }
+                }
+                std::string &key = monsters_keys[lowest_index];
+                if (mission_monsters.contains(key))
+                {
+                    mission_monsters[key] += 1;
+                }
+                else
+                {
+                    mission_monsters_keys.push_back(key);
+                    mission_monsters[key] = 1;
+                }
+                break;
+            }
+            
+        }
+        Mission mission(std::string("Elimination quest"), current_level, mission_monsters, mission_monsters_keys);
+        mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size() - 1, terrain_types_weights)];
     }
     
 
-    return Mission();
 }

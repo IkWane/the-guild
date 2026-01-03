@@ -1,8 +1,9 @@
 #pragma once
 #include "magicNumbers.hpp"
 #include "json.hpp"
+#include "RNG.hpp"
+#include "FileManager.hpp"
 #include <ncurses.h>
-#include <RNG.hpp>
 
 namespace gameUtil
 {
@@ -15,4 +16,6 @@ namespace gameUtil
     int chooseOption(nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
 
     std::string snakeToNormal(std::string &str);
+
+    void loadJsonConfig(std::string path, nlohmann::json &data, std::vector<std::string> &keys, std::vector<int> &weights);
 } // namespace gameUtil
