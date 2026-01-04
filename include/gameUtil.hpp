@@ -4,6 +4,7 @@
 #include "RNG.hpp"
 #include "FileManager.hpp"
 #include <ncurses.h>
+#include "Debug.hpp"
 
 namespace gameUtil
 {
@@ -18,4 +19,8 @@ namespace gameUtil
     std::string snakeToNormal(std::string &str);
 
     void loadJsonConfig(std::string path, nlohmann::json &data, std::vector<std::string> &keys, std::vector<int> &weights);
+
+    std::string fitStr(std::string str, int length);
+
+    void renderCharacterCards(std::vector<std::vector<std::string>> cardsLines);
 } // namespace gameUtil

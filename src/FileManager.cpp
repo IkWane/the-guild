@@ -2,6 +2,7 @@
 
 std::string FileManager::loadFile(const char *path)
 {
+    Debug::dbg << "Loading file: " << path << "\n";
     std::ifstream file(path);
     std::string lineStr;
     std::string result;
@@ -21,9 +22,8 @@ std::string FileManager::loadFile(std::string &path)
 nlohmann::json FileManager::loadJson(const char *path)
 {
     std::string fileContent = loadFile(path);
-    std::cout << path << std::endl;
+    Debug::dbg << "Parsing JSON\n";
     nlohmann::json result = nlohmann::json::parse(fileContent);
-    std::cout << "test" << std::endl;
     return result;
 }
 

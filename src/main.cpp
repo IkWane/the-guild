@@ -10,8 +10,7 @@
 
 int main()
 {
-    Debug::initDebug("test.txt");
-    Debug::dbg << "tee";
+    Debug::initDebug("log.txt");
     Game game = Game();
     game.run();
 

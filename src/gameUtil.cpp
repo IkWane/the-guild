@@ -187,11 +187,57 @@ std::string gameUtil::snakeToNormal(std::string &str)
 void gameUtil::loadJsonConfig(std::string path, nlohmann::json &data, std::vector<std::string> &keys, std::vector<int> &weights)
 {
     data = FileManager::loadJson(path.c_str());
+    Debug::dbg << "Loading JSON config from: " << path << "\n";
     weights = std::vector<int>();
     keys = std::vector<std::string>();
     for (auto& [key, val] : data.items())
     {
         weights.push_back(val["weight"].get<int>());
         keys.push_back(key);
+    }
+}
+
+std::string gameUtil::fitStr(std::string str, int length)
+{
+    if (str.length() > length)
+    {
+        return str.substr(0, length);
+    }
+    else
+    {
+        while (str.length() < length)
+        {
+            str += " ";
+        }
+        return str;
+    }
+}
+
+void gameUtil::renderCharacterCards(std::vector<std::vector<std::string>> cardsLines)
+{
+    int maxHeight = 0;
+    for (auto &cardLines : cardsLines)
+    {
+        if (cardLines.size() > maxHeight)
+        {
+            maxHeight = cardLines.size();
+        }
+    }
+    Debug::dbg << "Rendering " << cardsLines.size() << " character cards with max height " << maxHeight << "\n";
+    for (int i = 0; i < maxHeight; i++)
+    {
+        for (auto &cardLines : cardsLines)
+        {
+            if (i < cardLines.size())
+            {
+                printw("%s  ", cardLines[i].c_str());
+                
+            }
+            else
+            {
+                printw("%s  ", gameUtil::fitStr("", cardLines[0].length()).c_str());
+            }
+        }
+        printw("\n");
     }
 }

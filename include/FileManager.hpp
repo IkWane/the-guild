@@ -5,6 +5,7 @@
 #include <filesystem>
 #include "json.hpp"
 #include "gameUtil.hpp"
+#include "Debug.hpp"
 
 // All paths are relative to the executable file
 class FileManager

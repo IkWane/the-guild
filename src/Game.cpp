@@ -4,6 +4,7 @@
 // loads configuration based on data/config.json
 Game::Game()
 {
+    Debug::dbg << "Initializing window and RNG\n";
     RNG::get(0);
     window = initscr();
 
@@ -16,7 +17,7 @@ Game::Game()
     dialogs = FileManager::loadJson(config["dialogs_file"].get<std::string>().c_str());
     adventurer_names = FileManager::loadJson(config["adventurer_names_file"].get<std::string>().c_str());
     gameUtil::loadJsonConfig(
-        config["classes_file"].get<std::string>(), 
+        config["classes_file"].get<std::string>(),
         classes, 
         classes_keys, 
         classes_weights
@@ -46,7 +47,11 @@ Game::Game()
         monsters_levels
     );
     
-    
+    Adventurer adv = newRandomAdventurer();
+    gameUtil::renderCharacterCards({adv.toCharacterCard()});
+    getch();
+
+    Debug::dbg << "Starting new or loading existing game\n";
     giveDialog("Iintro");
 
     bool invalidFile = true;
@@ -133,6 +138,7 @@ int Game::run()
 // sends a dialog to the player based on the data found at dialogName in the data/dialogs.json file
 int Game::giveDialog(const char *dialogName)
 {
+    Debug::dbg << "Giving dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
 
     if (dialog.contains("text"))
@@ -141,20 +147,56 @@ int Game::giveDialog(const char *dialogName)
     }
     if (dialog.contains("choices"))
     {
-        if (dialog.contains("defaultChoice"))
+        int option = -1;
+        while (option == -1)
         {
-            return gameUtil::chooseOption(dialog["choices"], dialog["defaultChoice"].get<int>(), true);
+            option = gameUtil::chooseOption(
+                dialog["choices"], 
+                dialog.contains("defaultChoice") ? dialog["defaultChoice"].get<int>() : 0, 
+                true
+            );
+            if (option == -1)
+            {
+                int quitChoice = giveDialog("QquitGame");
+                if (quitChoice == 0)
+                {
+                    exitGame();
+                }
+                else
+                {
+                    printw("%s\n", dialog["text"].get<std::string>().c_str());
+                    option = -1;
+                }
+            }
         }
-        
-        return gameUtil::chooseOption(dialog["choices"], 0, true);
+        return option;
     }     
     return -1;
 }
 
 int Game::numberDialog(const char *dialogName)
 {
+    Debug::dbg << "Giving number dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
     printw("%s\n", dialog["text"].get<std::string>().c_str());
+    int min, max;
+    if (dialog.contains("min"))
+    {
+        min = dialog["min"].get<int>();
+    }
+    else
+    {
+        min = -2147483648;
+    }
+    if (dialog.contains("max"))
+    {
+        max = dialog["max"].get<int>();
+    }
+    else
+    {
+        max = 2147483647;
+    }
+    
     std::string list[] = {"<<<", "<<", "<", "", ">", ">>", ">>>"};
     int selected = 0;
     int number = 0;
@@ -206,12 +248,14 @@ int Game::numberDialog(const char *dialogName)
             break;
         }
     }
+    number = std::clamp(number, min, max);
     printw("> %d\n", number);
     return number;
 }
 
 std::string Game::textEntryDialog(const char *dialogName)
 {
+    Debug::dbg << "Giving text entry dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
     printw("%s\n", dialog["text"].get<std::string>().c_str());
     std::string input = gameUtil::readStr();
@@ -227,22 +271,25 @@ int Game::getDiceRoll(int max)
 // closes the program, and saves if optional parameter is set to true
 void Game::exitGame(bool save)
 {
+    Debug::dbg << "Exiting game\n";
     if (save)
     {
         guild.saveGuild(saveFileName.c_str());
     }
-    endwin();
+    Game::~Game();
     std::exit(0);
 }
 
 Game::~Game()
 {
+    Debug::dbg << "Destroying game instance\n";
     endwin();
 }
 
 // creates a new adventurer with randomized traits
 Adventurer Game::newRandomAdventurer()
 {
+    Debug::dbg << "Creating new random adventurer\n";
     RNG &rng = RNG::get();
     std::string advFirstName = adventurer_names["first_names"][rng.uniformInt(
         0, 
@@ -255,9 +302,10 @@ Adventurer Game::newRandomAdventurer()
     )].get<std::string>();
 
     Adventurer adv = Adventurer(advFirstName + " " + advLastName, 100);
-    int drawn_indices[] = {-1, -1, -1, -1, -1};
+    int modifierCount = rng.uniformInt(1, 6);
+    int drawn_indices[] = {-1, -1, -1, -1, -1, -1};
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < modifierCount; i++)
     {
         int drawn = -1;
         while (drawn == -1) {
@@ -305,47 +353,48 @@ void Game::updateAdventurerStatus(Adventurer &adv)
 // updates the adventurer's stats based on data from the json found at key in dataFrom
 void Game::updateAdventurerFromJsonKey(Adventurer &adv, std::string &key, nlohmann::json &dataFrom)
 {
+    Debug::dbg << "Updating adventurer " << adv.name << " from key: " << key << "\n";
     nlohmann::json &data = dataFrom[key];
     if (data.contains("strength"))
     {
-        adv.strength += data["strength"].get<int>();
+        adv.stats.strength += data["strength"].get<int>();
     }
     if (data.contains("agility"))
     {
-        adv.agility += data["agility"].get<int>();
+        adv.stats.agility += data["agility"].get<int>();
     }
     if (data.contains("fortitude"))
     {
-        adv.fortitude += data["fortitude"].get<int>();
+        adv.stats.fortitude += data["fortitude"].get<int>();
     }
     if (data.contains("willpower"))
     {
-        adv.willpower += data["willpower"].get<int>();
+        adv.stats.willpower += data["willpower"].get<int>();
     }
     if (data.contains("perception"))
     {
-        adv.perception += data["perception"].get<int>();
+        adv.stats.perception += data["perception"].get<int>();
     }
     if (data.contains("wisdom"))
     {
-        adv.wisdom += data["wisdom"].get<int>();
+        adv.stats.wisdom += data["wisdom"].get<int>();
     }
     if (data.contains("magic"))
     {
-        adv.magic += data["magic"].get<int>();
+        adv.stats.magic += data["magic"].get<int>();
     }
     if (data.contains("strengths"))
     {
         for (auto &el : data["strengths"])
         {
-            adv.strengths.push_back(el.get<std::string>());
+            adv.stats.strengths.push_back(el.get<std::string>());
         }
     }
     if (data.contains("weaknesses"))
     {
         for (auto &el : data["weaknesses"])
         {
-            adv.weaknesses.push_back(el.get<std::string>());
+            adv.stats.weaknesses.push_back(el.get<std::string>());
         }
     }
 }
@@ -353,6 +402,7 @@ void Game::updateAdventurerFromJsonKey(Adventurer &adv, std::string &key, nlohma
 // Creates a mission with randomized parameter, found within the json config files
 Mission Game::newRandomMission(int level)
 {
+    Debug::dbg << "Creating new random mission of level: " << level << "\n";
     RNG &rng = RNG::get();
     if (level >= 5)
     {
@@ -407,6 +457,110 @@ Mission Game::newRandomMission(int level)
         Mission mission(std::string("Elimination quest"), current_level, mission_monsters, mission_monsters_keys);
         mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size() - 1, terrain_types_weights)];
     }
-    
+    else
+    {
+        Mission mission(std::string("Training quest"), level, std::map<std::string, int>(), std::vector<std::string>());
+        mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size() - 1, terrain_types_weights)];
+        return mission;
+    }
+}
 
+Stats Game::calculateMissionStats(Mission &mission)
+{
+    Stats monsterStats;
+    for (auto &key : mission.monsters_keys)
+    {
+        nlohmann::json &monsterData = monsters[key];
+
+        monsterStats.strength += (
+            monsterData.contains("strength") ? 
+            monsterData["strength"].get<int>() : 0
+        ) * mission.monsters[key];
+        
+        monsterStats.agility += (
+            monsterData.contains("agility") ? 
+            monsterData["agility"].get<int>() : 0
+        ) * mission.monsters[key];
+
+        monsterStats.fortitude += (
+            monsterData.contains("fortitude") ? 
+            monsterData["fortitude"].get<int>() : 0
+        ) * mission.monsters[key];
+
+        monsterStats.willpower += (
+            monsterData.contains("willpower") ? 
+            monsterData["willpower"].get<int>() : 0
+        ) * mission.monsters[key];
+
+        monsterStats.perception += (
+            monsterData.contains("perception") ? 
+            monsterData["perception"].get<int>() : 0
+        ) * mission.monsters[key];
+
+        monsterStats.wisdom += (
+            monsterData.contains("wisdom") ? 
+            monsterData["wisdom"].get<int>() : 0
+        ) * mission.monsters[key];
+
+        monsterStats.magic += (
+            monsterData.contains("magic") ? 
+            monsterData["magic"].get<int>() : 0
+        ) * mission.monsters[key];
+        if (monsterData[key].contains("strengths"))
+        {
+            monsterStats.strengths.insert(
+                monsterStats.strengths.end(),
+                monsterData["strengths"].begin(),
+                monsterData["strengths"].end()
+            );
+        }
+        if (monsterData[key].contains("weaknesses"))
+        {
+            monsterStats.weaknesses.insert(
+                monsterStats.weaknesses.end(),
+                monsterData["weaknesses"].begin(),
+                monsterData["weaknesses"].end()
+            );
+        }
+    }
+
+    return monsterStats;
+}
+
+Stats Game::calculateTeamStats(Mission &mission)
+{
+    Stats teamStats;
+    for (auto &adv : mission.assignedAdventurers)
+    {
+        std::optional<Adventurer*> advOpt = guild.getAdventurerByName(adv);
+        if (advOpt.has_value())
+        {
+            Adventurer *advPtr = advOpt.value();
+            teamStats.strength += advPtr->stats.strength;
+            teamStats.agility += advPtr->stats.agility;
+            teamStats.fortitude += advPtr->stats.fortitude;
+            teamStats.willpower += advPtr->stats.willpower;
+            teamStats.perception += advPtr->stats.perception;
+            teamStats.wisdom += advPtr->stats.wisdom;
+            teamStats.magic += advPtr->stats.magic;
+            teamStats.strengths.insert(
+                teamStats.strengths.end(),
+                advPtr->stats.strengths.begin(),
+                advPtr->stats.strengths.end()
+            );
+            teamStats.weaknesses.insert(
+                teamStats.weaknesses.end(),
+                advPtr->stats.weaknesses.begin(),
+                advPtr->stats.weaknesses.end()
+            );
+        }
+    }
+    return Stats();
+}
+
+bool Game::determineSuccess(Mission &mission)
+{
+    Stats monsterStats = calculateMissionStats(mission);
+
+    return false;
 }

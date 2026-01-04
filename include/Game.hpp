@@ -6,6 +6,8 @@
 #include "gameUtil.hpp"
 #include "FileManager.hpp"
 #include "TheGuild.hpp"
+#include "Debug.hpp"
+#include <algorithm>
 
 class Game {
 public:
@@ -21,6 +23,9 @@ public:
     void updateAdventurerStatus(Adventurer &adv);
     void updateAdventurerFromJsonKey(Adventurer &adv, std::string &key, nlohmann::json &extractFrom);
     Mission newRandomMission(int level);
+    Stats calculateMissionStats(Mission &mission);
+    Stats calculateTeamStats(Mission &mission);
+    bool determineSuccess(Mission &mission);
 private:
     WINDOW *window;
     nlohmann::json dialogs;
@@ -42,5 +47,4 @@ private:
     std::vector<int> monsters_levels;
     TheGuild guild;
     std::string saveFileName;
-
 };

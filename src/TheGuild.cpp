@@ -48,3 +48,17 @@ void TheGuild::saveGuild(const char *path)
     file << jsonGuild.dump();
     file.close();
 }
+
+// Returns an adventurer pointer if found, else returns empty optional.
+// (Note: returning pointer to element in vector, so be careful with vector modifications)
+std::optional<Adventurer*> TheGuild::getAdventurerByName(std::string &name)
+{
+    for (auto &el : adventurers)
+    {
+        if (el.name == name)
+        {
+            return &el;
+        }
+    }
+    return {};
+}

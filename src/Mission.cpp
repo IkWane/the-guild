@@ -2,6 +2,7 @@
 
 Mission::Mission(nlohmann::json json)
 {
+    Debug::dbg << "Creating mission from JSON\n";
     description = json["description"].get<std::string>();
     monsters = json["monsters"].get<std::map<std::string, int>>();
     terrainType = json["terrain_type"].get<std::string>();
@@ -10,6 +11,7 @@ Mission::Mission(nlohmann::json json)
 
 nlohmann::json Mission::toJson()
 {
+    Debug::dbg << "Converting mission to JSON\n";
     nlohmann::json::object_t obj_values = {
         {"description", description},
         {"monsters", monsters},

@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <iostream>
 #include <ostream>
@@ -7,12 +8,17 @@ class Debug {
 public:
     static void initDebug(const char* path);
     static Debug dbg;
-    
-    template<typename T> void operator<<(T t)
+    template<typename T> friend Debug& operator<<(Debug& d, T t)
     {
-        std::ofstream file(path.c_str());
+        if (d.path == "")
+        {
+            std::cerr << "Debug was not initialized properly" << std::endl;
+            return d;
+        }
+        std::ofstream file(d.path.c_str(), std::ios_base::app | std::ios_base::out);
         file << t;
         file.close();
+        return d;
     }
 private:
     std::string path;
