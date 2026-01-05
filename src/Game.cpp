@@ -47,8 +47,8 @@ Game::Game()
         monsters_levels
     );
     
-    Adventurer adv = newRandomAdventurer();
-    gameUtil::renderCharacterCards({adv.toCharacterCard()});
+    
+
     getch();
 
     Debug::dbg << "Starting new or loading existing game\n";
@@ -90,15 +90,6 @@ Game::Game()
             saveFileName = "savefile.json";
             invalidFile = false;
             newGame = true;
-            break;
-        case -1:
-            {
-                int quitChoice = giveDialog("QquitGame");
-                if (quitChoice == 0)
-                {
-                    exitGame(false);
-                }
-            }
             break;
         default:
             break;
@@ -215,7 +206,7 @@ int Game::numberDialog(const char *dialogName)
                 }
                 else
                 {
-                    printw("%s\n", dialog["text"].get<std::string>().c_str());
+                    printw("\n%s\n", dialog["text"].get<std::string>().c_str());
                 }
             }
             selected = 0;
@@ -276,8 +267,8 @@ void Game::exitGame(bool save)
     {
         guild.saveGuild(saveFileName.c_str());
     }
-    Game::~Game();
-    std::exit(0);
+    endwin();
+    throw GameExit(0);
 }
 
 Game::~Game()
@@ -555,12 +546,79 @@ Stats Game::calculateTeamStats(Mission &mission)
             );
         }
     }
-    return Stats();
+    return teamStats;
 }
 
 bool Game::determineSuccess(Mission &mission)
 {
+    Debug::dbg << "Determining mission success\n";
     Stats monsterStats = calculateMissionStats(mission);
-
+    Stats teamStats = calculateTeamStats(mission);
+    int points = calculatePoints(teamStats, monsterStats, mission.terrainType);
+    Debug::dbg << "Mission points calculated: " << points << "\n";
+    int probability = gameUtil::sigmoid(points, 0.1);
+    Debug::dbg << "Mission success probability: " << probability << "\n";
+    int roll = getDiceRoll(100);
+    Debug::dbg << "Mission roll: " << roll << "\n";
+    if (roll >= probability)
+    {
+        return true;
+    }
     return false;
+}
+
+int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &terrainType)
+{
+    nlohmann::json terrainData = terrain_types[terrainType];
+    int points = 0;
+    points += teamStats.strength - monsterStats.strength;
+    points += teamStats.agility - monsterStats.agility;
+    points += teamStats.fortitude - monsterStats.fortitude;
+    points += teamStats.willpower - monsterStats.willpower;
+    points += teamStats.perception / (terrainData.contains("visibility") ? terrainData["visibility"].get<int>() : 1) - monsterStats.perception;
+    points += teamStats.wisdom - monsterStats.wisdom;
+    points += teamStats.magic - monsterStats.magic;
+    for (auto &strength : teamStats.strengths)
+    {
+        for (auto &weakness : monsterStats.weaknesses)
+        {
+            if (strength == weakness)
+            {
+                points += 5;
+            }
+            else 
+            {
+                points += 1;
+            }
+        }
+        for (auto &tag : terrainData["tags"])
+        {
+            if (strength == tag)
+            {
+                points += 5;
+            }
+        }
+    }
+    for (auto &weakness : teamStats.weaknesses)
+    {
+        for (auto &strength : monsterStats.strengths)
+        {
+            if (weakness == strength)
+            {
+                points -= 5;
+            }
+            else 
+            {
+                points -= 1;
+            }
+        }
+        for (auto &tag : terrainData["tags"])
+        {
+            if (weakness == tag)
+            {
+                points -= 5;
+            }
+        }
+    }
+    return points;
 }

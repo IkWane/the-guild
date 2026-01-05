@@ -5,10 +5,13 @@
 #include "FileManager.hpp"
 #include <ncurses.h>
 #include "Debug.hpp"
+#include "Stats.hpp"
 
 namespace gameUtil
 {
     int wrapAround(int a, int n);
+
+    int sigmoid(int x, int steepness = 1);
 
     std::string readStr();
 
@@ -23,4 +26,5 @@ namespace gameUtil
     std::string fitStr(std::string str, int length);
 
     void renderCharacterCards(std::vector<std::vector<std::string>> cardsLines);
+
 } // namespace gameUtil

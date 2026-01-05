@@ -8,6 +8,7 @@
 #include "TheGuild.hpp"
 #include "Debug.hpp"
 #include <algorithm>
+#include "GameExit.hpp"
 
 class Game {
 public:
@@ -26,6 +27,7 @@ public:
     Stats calculateMissionStats(Mission &mission);
     Stats calculateTeamStats(Mission &mission);
     bool determineSuccess(Mission &mission);
+    int calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &terrainType);
 private:
     WINDOW *window;
     nlohmann::json dialogs;

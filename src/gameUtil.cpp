@@ -10,6 +10,11 @@ int gameUtil::wrapAround(int a, int n)
     return a;  
 }
 
+int gameUtil::sigmoid(int x, int steepness)
+{
+    return 1 / (1 + exp(-steepness * x));
+}
+
 std::string gameUtil::readStr()
 {
     std::string input;
