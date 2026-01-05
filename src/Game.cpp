@@ -46,10 +46,6 @@ Game::Game()
         monsters_keys, 
         monsters_levels
     );
-    
-    
-
-    getch();
 
     Debug::dbg << "Starting new or loading existing game\n";
     giveDialog("Iintro");
@@ -117,9 +113,26 @@ Game::Game()
 // starts the game loop
 int Game::run()
 {
-    printw("Current Guild gold: %d\n", guild.gold);
-    guild.gold += numberDialog("NdepositGold");
-    printw("Guild gold: %d\n", guild.gold);
+    Debug::dbg << "Running game loop\n";
+
+    // printw("Current Guild gold: %d\n", guild.gold);
+    // guild.gold += numberDialog("NdepositGold");
+    // printw("Guild gold: %d\n", guild.gold);
+
+    guild.adventurers.push_back(newRandomAdventurer());
+    guild.adventurers.push_back(newRandomAdventurer());
+    guild.adventurers.push_back(newRandomAdventurer());
+    guild.adventurers.push_back(newRandomAdventurer());
+    renderCharacters(guild.adventurerNames());
+
+    Mission mission = newRandomMission(1);
+    std::vector<std::string> advNames = guild.adventurerNames();
+    mission.assignedAdventurers.insert(
+        mission.assignedAdventurers.end(), 
+        advNames.begin(), 
+        advNames.end()
+    );
+
     getch();
 
     guild.saveGuild(saveFileName.c_str());
@@ -621,4 +634,18 @@ int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &te
         }
     }
     return points;
+}
+
+void Game::renderCharacters(std::vector<std::string> adventurers)
+{
+    std::vector<std::vector<std::string>> cardsLines;
+    for (auto &adv : adventurers)
+    {
+        std::optional<Adventurer*> advOpt = guild.getAdventurerByName(adv);
+        if (advOpt.has_value())
+        {
+            cardsLines.push_back(advOpt.value()->toCharacterCard());
+        }
+    }
+    gameUtil::renderCharacterCards(cardsLines);
 }

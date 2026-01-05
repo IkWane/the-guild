@@ -62,3 +62,13 @@ std::optional<Adventurer*> TheGuild::getAdventurerByName(std::string &name)
     }
     return {};
 }
+
+std::vector<std::string> TheGuild::adventurerNames()
+{
+    std::vector<std::string> names;
+    for (const auto &adv : adventurers)
+    {
+        names.push_back(adv.name);
+    }
+    return names;
+}

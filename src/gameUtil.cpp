@@ -220,6 +220,20 @@ std::string gameUtil::fitStr(std::string str, int length)
 
 void gameUtil::renderCharacterCards(std::vector<std::vector<std::string>> cardsLines)
 {
+    Debug::dbg << "Starting rendering of " << cardsLines.size() << " character cards\n";
+    int totalWidth = (cardsLines[0][0].length() + 2) * cardsLines.size();
+    int maxX, maxY;
+    getmaxyx(stdscr, maxY, maxX);
+    std::vector<std::vector<std::string>> extraCardsLines;
+    int maxCardsPerRow = std::max(1, maxX / int(cardsLines[0][0].length() + 2));
+    int extraCards = cardsLines.size() - maxCardsPerRow;
+    Debug::dbg << "Total width of character cards: " << totalWidth << ", max screen width: " << maxX << ", extra cards : " << extraCards << "\n";
+    extraCardsLines = std::vector<std::vector<std::string>>();
+    for (int i = 0; i < extraCards; i++)
+    {
+        extraCardsLines.push_back(cardsLines.back());
+        cardsLines.pop_back();
+    }
     int maxHeight = 0;
     for (auto &cardLines : cardsLines)
     {
@@ -236,7 +250,6 @@ void gameUtil::renderCharacterCards(std::vector<std::vector<std::string>> cardsL
             if (i < cardLines.size())
             {
                 printw("%s  ", cardLines[i].c_str());
-                
             }
             else
             {
@@ -244,5 +257,10 @@ void gameUtil::renderCharacterCards(std::vector<std::vector<std::string>> cardsL
             }
         }
         printw("\n");
+    }
+    if (extraCardsLines.size() > 0)
+    {
+        printw("\n");
+        renderCharacterCards(extraCardsLines);
     }
 }

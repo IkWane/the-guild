@@ -6,6 +6,7 @@
 #include <ncurses.h>
 #include "Debug.hpp"
 #include "Stats.hpp"
+#include "Adventurer.hpp"
 
 namespace gameUtil
 {
@@ -26,5 +27,4 @@ namespace gameUtil
     std::string fitStr(std::string str, int length);
 
     void renderCharacterCards(std::vector<std::vector<std::string>> cardsLines);
-
 } // namespace gameUtil

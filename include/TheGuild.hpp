@@ -17,4 +17,5 @@ public:
     std::vector<Mission> missions;
     void saveGuild(const char *path);
     std::optional<Adventurer*> getAdventurerByName(std::string &name);
+    std::vector<std::string> adventurerNames();
 };

@@ -28,6 +28,7 @@ public:
     Stats calculateTeamStats(Mission &mission);
     bool determineSuccess(Mission &mission);
     int calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &terrainType);
+    void renderCharacters(std::vector<std::string> adventurers);
 private:
     WINDOW *window;
     nlohmann::json dialogs;
