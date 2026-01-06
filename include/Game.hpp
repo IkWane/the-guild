@@ -13,7 +13,7 @@
 class Game {
 public:
     Game();
-    int run();
+    void run();
     int giveDialog(const char *dialogName);
     int numberDialog(const char *dialogName);
     std::string textEntryDialog(const char *dialogName);
@@ -24,11 +24,12 @@ public:
     void updateAdventurerStatus(Adventurer &adv);
     void updateAdventurerFromJsonKey(Adventurer &adv, std::string &key, nlohmann::json &extractFrom);
     Mission newRandomMission(int level);
-    Stats calculateMissionStats(Mission &mission);
+    Stats calculateMonstersStats(Mission &mission);
     Stats calculateTeamStats(Mission &mission);
     bool determineSuccess(Mission &mission);
     int calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &terrainType);
     void renderCharacters(std::vector<std::string> adventurers);
+    void renderMissions(std::vector<Mission> missions);
 private:
     WINDOW *window;
     nlohmann::json dialogs;

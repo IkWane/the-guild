@@ -2,6 +2,7 @@
 #include <vector>
 #include "json.hpp"
 #include "Debug.hpp"
+#include "gameUtil.hpp"
 
 class Mission
 {
@@ -16,4 +17,5 @@ public:
     std::string terrainType;
     std::vector<std::string> assignedAdventurers;
     int level;
+    std::vector<std::string> toMissionCard();
 };

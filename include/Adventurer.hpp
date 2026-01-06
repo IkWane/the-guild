@@ -20,13 +20,13 @@ public:
     Adventurer(nlohmann::json json);
     void resetStats();
     void updateLevel();
+    void balanceStats();
+    void balanceStrengthsAndWeaknesses();
     nlohmann::json toJson();
     std::string name;
     int level;
     int hunger;
     Stats stats;
-    // std::vector<std::string> weaknesses;
-    // std::vector<std::string> strengths;
     std::vector<std::string> modifiers;
     std::string gameClass;
     std::string race;

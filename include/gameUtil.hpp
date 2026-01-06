@@ -20,11 +20,11 @@ namespace gameUtil
 
     int chooseOption(nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
 
-    std::string snakeToNormal(std::string &str);
+    std::string snakeToNormal(std::string &str, bool upperFirst = false);
 
     void loadJsonConfig(std::string path, nlohmann::json &data, std::vector<std::string> &keys, std::vector<int> &weights);
 
-    std::string fitStr(std::string str, int length);
+    std::string fitStr(std::string str, int length, char fillChar = ' ');
 
-    void renderCharacterCards(std::vector<std::vector<std::string>> cardsLines);
+    void renderCards(std::vector<std::vector<std::string>> cardsLines);
 } // namespace gameUtil

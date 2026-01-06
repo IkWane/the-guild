@@ -1,6 +1,6 @@
 #include "gameUtil.hpp"
 
-
+// Wraps integer a around n (0 to n-1)
 int gameUtil::wrapAround(int a, int n)
 {
     if (a >= n)
@@ -15,6 +15,7 @@ int gameUtil::sigmoid(int x, int steepness)
     return 1 / (1 + exp(-steepness * x));
 }
 
+// Reads a string from ncurses input until Enter is pressed
 std::string gameUtil::readStr()
 {
     std::string input;
@@ -36,6 +37,7 @@ std::string gameUtil::readStr()
     return input;
 }
 
+// Presents a horizontal choice menu to the player and returns the selected option index
 int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultChoice, bool giveResult)
 {
     int previous_selected = -1;
@@ -104,6 +106,7 @@ int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultCho
     return selected;
 }
 
+// Presents a horizontal choice menu to the player using a JSON array of options and returns the selected option index
 int gameUtil::chooseOption(nlohmann::json options, int defaultChoice, bool giveResult)
 {
     int previous_selected = -1;
@@ -172,7 +175,8 @@ int gameUtil::chooseOption(nlohmann::json options, int defaultChoice, bool giveR
     return selected;
 }
 
-std::string gameUtil::snakeToNormal(std::string &str)
+// Converts a snake_case string to Normal Case (spaces and optional capitalization)
+std::string gameUtil::snakeToNormal(std::string &str, bool upperFirst)
 {
     std::string newStr = "";
     for (auto &c : str)
@@ -186,9 +190,15 @@ std::string gameUtil::snakeToNormal(std::string &str)
             newStr += c;
         }
     }
+    if (upperFirst)
+    {
+        newStr[0] = std::toupper(newStr[0]);
+    }
     return newStr;
 }
 
+// Loads a JSON config file and extracts keys and weights into separate vectors
+// Note that the JSON file is expected to have entries with a "weight" field
 void gameUtil::loadJsonConfig(std::string path, nlohmann::json &data, std::vector<std::string> &keys, std::vector<int> &weights)
 {
     data = FileManager::loadJson(path.c_str());
@@ -202,7 +212,8 @@ void gameUtil::loadJsonConfig(std::string path, nlohmann::json &data, std::vecto
     }
 }
 
-std::string gameUtil::fitStr(std::string str, int length)
+// Fits a string to a given length by truncating or padding with fillChar (default is space)
+std::string gameUtil::fitStr(std::string str, int length, char fillChar)
 {
     if (str.length() > length)
     {
@@ -212,22 +223,25 @@ std::string gameUtil::fitStr(std::string str, int length)
     {
         while (str.length() < length)
         {
-            str += " ";
+            str += fillChar;
         }
         return str;
     }
 }
 
-void gameUtil::renderCharacterCards(std::vector<std::vector<std::string>> cardsLines)
+// Renders multiple text-based cards side by side in the ncurses window
+// Each card is represented as a vector of strings (lines)
+// Cards that don't fit in the current row are passed to a new row recursively
+void gameUtil::renderCards(std::vector<std::vector<std::string>> cardsLines)
 {
-    Debug::dbg << "Starting rendering of " << cardsLines.size() << " character cards\n";
+    Debug::dbg << "Trying to render " << cardsLines.size() << " cards\n";
     int totalWidth = (cardsLines[0][0].length() + 2) * cardsLines.size();
     int maxX, maxY;
     getmaxyx(stdscr, maxY, maxX);
     std::vector<std::vector<std::string>> extraCardsLines;
     int maxCardsPerRow = std::max(1, maxX / int(cardsLines[0][0].length() + 2));
     int extraCards = cardsLines.size() - maxCardsPerRow;
-    Debug::dbg << "Total width of character cards: " << totalWidth << ", max screen width: " << maxX << ", extra cards : " << extraCards << "\n";
+    Debug::dbg << "Total width of cards: " << totalWidth << ", max screen width: " << maxX << ", extra cards : " << extraCards << "\n";
     extraCardsLines = std::vector<std::vector<std::string>>();
     for (int i = 0; i < extraCards; i++)
     {
@@ -242,7 +256,7 @@ void gameUtil::renderCharacterCards(std::vector<std::vector<std::string>> cardsL
             maxHeight = cardLines.size();
         }
     }
-    Debug::dbg << "Rendering " << cardsLines.size() << " character cards with max height " << maxHeight << "\n";
+    Debug::dbg << "Rendering " << cardsLines.size() << " cards with max height " << maxHeight << "\n";
     for (int i = 0; i < maxHeight; i++)
     {
         for (auto &cardLines : cardsLines)
@@ -261,6 +275,6 @@ void gameUtil::renderCharacterCards(std::vector<std::vector<std::string>> cardsL
     if (extraCardsLines.size() > 0)
     {
         printw("\n");
-        renderCharacterCards(extraCardsLines);
+        renderCards(extraCardsLines);
     }
 }

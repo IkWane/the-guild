@@ -1,12 +1,12 @@
 {
     "None": {
         "weight":0,
-        "visibility":0,
+        "visibility":100,
         "tags": []
     },
     "swamp": {
         "weight":100,
-        "visibility": 2,
+        "visibility": 25,
         "tags": [
             "mud",
             "water",

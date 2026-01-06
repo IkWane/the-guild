@@ -111,20 +111,17 @@ Game::Game()
 }
 
 // starts the game loop
-int Game::run()
+void Game::run()
 {
     Debug::dbg << "Running game loop\n";
 
-    // printw("Current Guild gold: %d\n", guild.gold);
-    // guild.gold += numberDialog("NdepositGold");
-    // printw("Guild gold: %d\n", guild.gold);
-
+    
     guild.adventurers.push_back(newRandomAdventurer());
     guild.adventurers.push_back(newRandomAdventurer());
     guild.adventurers.push_back(newRandomAdventurer());
     guild.adventurers.push_back(newRandomAdventurer());
     renderCharacters(guild.adventurerNames());
-
+    
     Mission mission = newRandomMission(1);
     std::vector<std::string> advNames = guild.adventurerNames();
     mission.assignedAdventurers.insert(
@@ -133,10 +130,25 @@ int Game::run()
         advNames.end()
     );
 
+    guild.missions.push_back(mission);
+    renderMissions(guild.missions);
+    bool success = determineSuccess(mission);
+    if (success)
+    {
+        printw("Mission succeeded!\n");
+    }
+    else
+    {
+        printw("Mission failed!\n");
+    }
+    
     getch();
 
-    guild.saveGuild(saveFileName.c_str());
-    return 0;
+    // printw("Current Guild gold: %d\n", guild.gold);
+    // guild.gold += numberDialog("NdepositGold");
+    // printw("Guild gold: %d\n", guild.gold);
+
+    exitGame(true);
 }
 
 // sends a dialog to the player based on the data found at dialogName in the data/dialogs.json file
@@ -330,13 +342,16 @@ Adventurer Game::newRandomAdventurer()
             }
         }
         drawn_indices[i] = drawn;
+        Debug::dbg << "Drawn modifier: " << adventurer_modifiers_keys[drawn] << "\n";
         adv.modifiers.push_back(adventurer_modifiers_keys[drawn]);
     }
 
-    updateAdventurerStatus(adv);
-
     adv.race = races_keys[rng.weightedInt(0, races.size()-1, races_weights)];
+    Debug::dbg << "Drawn race: " << adv.race << "\n";
     adv.gameClass = classes_keys[rng.weightedInt(0, classes.size()-1, classes_weights)];
+    Debug::dbg << "Drawn class: " << adv.gameClass << "\n";
+
+    updateAdventurerStatus(adv);
     
     return adv;
 }
@@ -344,13 +359,17 @@ Adventurer Game::newRandomAdventurer()
 // updates the adventurer's stats based on his traits (race, class, modifiers)
 void Game::updateAdventurerStatus(Adventurer &adv)
 {
+    Debug::dbg << "Updating adventurer status for: " << adv.name << "\n";
     adv.resetStats();
     updateAdventurerFromJsonKey(adv, adv.race, races);
     updateAdventurerFromJsonKey(adv, adv.gameClass, classes);
+    Debug::dbg << adv.modifiers.size() << " modifiers to apply\n";
     for (auto &key : adv.modifiers)
     {
         updateAdventurerFromJsonKey(adv, key, adventurer_modifiers);
     }
+    adv.balanceStats();
+    adv.balanceStrengthsAndWeaknesses();
     adv.updateLevel();
 }
 
@@ -460,6 +479,7 @@ Mission Game::newRandomMission(int level)
         }
         Mission mission(std::string("Elimination quest"), current_level, mission_monsters, mission_monsters_keys);
         mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size() - 1, terrain_types_weights)];
+        return mission;
     }
     else
     {
@@ -469,8 +489,10 @@ Mission Game::newRandomMission(int level)
     }
 }
 
-Stats Game::calculateMissionStats(Mission &mission)
+// calculates the total stats of all monsters in the mission
+Stats Game::calculateMonstersStats(Mission &mission)
 {
+    Debug::dbg << "Calculating monster stats for mission\n";
     Stats monsterStats;
     for (auto &key : mission.monsters_keys)
     {
@@ -531,8 +553,10 @@ Stats Game::calculateMissionStats(Mission &mission)
     return monsterStats;
 }
 
+// calculates the total stats of all adventurers assigned to the mission
 Stats Game::calculateTeamStats(Mission &mission)
 {
+    Debug::dbg << "Calculating team stats for mission\n";
     Stats teamStats;
     for (auto &adv : mission.assignedAdventurers)
     {
@@ -562,80 +586,107 @@ Stats Game::calculateTeamStats(Mission &mission)
     return teamStats;
 }
 
+// determines if the mission is successful based on team stats, monster stats, and terrain type
 bool Game::determineSuccess(Mission &mission)
 {
     Debug::dbg << "Determining mission success\n";
-    Stats monsterStats = calculateMissionStats(mission);
+    Stats monsterStats = calculateMonstersStats(mission);
     Stats teamStats = calculateTeamStats(mission);
     int points = calculatePoints(teamStats, monsterStats, mission.terrainType);
-    Debug::dbg << "Mission points calculated: " << points << "\n";
     int probability = gameUtil::sigmoid(points, 0.1);
     Debug::dbg << "Mission success probability: " << probability << "\n";
     int roll = getDiceRoll(100);
     Debug::dbg << "Mission roll: " << roll << "\n";
-    if (roll >= probability)
+    if (roll <= probability)
     {
         return true;
     }
     return false;
 }
 
+// calculates the points for the mission based on team stats, monster stats, and terrain type
 int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &terrainType)
 {
+    Debug::dbg << "Calculating points for mission\n";
     nlohmann::json terrainData = terrain_types[terrainType];
     int points = 0;
+    Debug::dbg << "Team Stats vs Monster Stats\n";
     points += teamStats.strength - monsterStats.strength;
     points += teamStats.agility - monsterStats.agility;
     points += teamStats.fortitude - monsterStats.fortitude;
     points += teamStats.willpower - monsterStats.willpower;
-    points += teamStats.perception / (terrainData.contains("visibility") ? terrainData["visibility"].get<int>() : 1) - monsterStats.perception;
+    points += teamStats.perception * (terrainData.contains("visibility") ? terrainData["visibility"].get<int>() : 1) / 100 - monsterStats.perception;
     points += teamStats.wisdom - monsterStats.wisdom;
     points += teamStats.magic - monsterStats.magic;
-    for (auto &strength : teamStats.strengths)
+    Debug::dbg << "Points after raw stats comparison: " << points << "\n";
+    Debug::dbg << "Calculating strengths and weaknesses interactions\n";
+    for (auto i = teamStats.strengths.begin(); i != teamStats.strengths.end(); ++i)
     {
-        for (auto &weakness : monsterStats.weaknesses)
+        bool matched = false;
+        for (auto j = monsterStats.weaknesses.begin(); j != monsterStats.weaknesses.end();++j)
         {
-            if (strength == weakness)
+            if (*i == *j)
             {
                 points += 5;
-            }
-            else 
-            {
-                points += 1;
+                matched = true;
+                teamStats.strengths.erase(i);
+                monsterStats.weaknesses.erase(j);
+                break;
             }
         }
         for (auto &tag : terrainData["tags"])
         {
-            if (strength == tag)
+            if (*i == tag)
             {
                 points += 5;
             }
         }
-    }
-    for (auto &weakness : teamStats.weaknesses)
-    {
-        for (auto &strength : monsterStats.strengths)
+        if (!matched)
         {
-            if (weakness == strength)
+            points += 1;
+        }
+        else
+        {
+            break;
+        }
+        
+    }
+    for (auto i = teamStats.weaknesses.begin(); i != teamStats.weaknesses.end(); ++i)
+    {
+        bool matched = false;
+        for (auto j = monsterStats.strengths.begin(); j != monsterStats.strengths.end();++j)
+        {
+            if (*i == *j)
             {
                 points -= 5;
-            }
-            else 
-            {
-                points -= 1;
+                matched = true;
+                teamStats.weaknesses.erase(i);
+                monsterStats.strengths.erase(j);
+                break;
             }
         }
         for (auto &tag : terrainData["tags"])
         {
-            if (weakness == tag)
+            if (*i == tag)
             {
                 points -= 5;
             }
         }
+        if (!matched)
+        {
+            points -= 1;
+        }
+        else
+        {
+            break;
+        }
+        
     }
+    Debug::dbg << "Final calculated points: " << points << "\n";
     return points;
 }
 
+// renders the character cards of the given adventurers side by side
 void Game::renderCharacters(std::vector<std::string> adventurers)
 {
     std::vector<std::vector<std::string>> cardsLines;
@@ -647,5 +698,16 @@ void Game::renderCharacters(std::vector<std::string> adventurers)
             cardsLines.push_back(advOpt.value()->toCharacterCard());
         }
     }
-    gameUtil::renderCharacterCards(cardsLines);
+    gameUtil::renderCards(cardsLines);
+}
+
+// renders the mission cards of the given missions side by side
+void Game::renderMissions(std::vector<Mission> missions)
+{
+    std::vector<std::vector<std::string>> cardsLines;
+    for (auto &mission : missions)
+    {
+        cardsLines.push_back(mission.toMissionCard());
+    }
+    gameUtil::renderCards(cardsLines);
 }

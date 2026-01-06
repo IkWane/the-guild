@@ -1,5 +1,6 @@
 #include "TheGuild.hpp"
 
+// Initializes a new guild with starter gold and empty adventurer and mission lists
 TheGuild::TheGuild()
 {
     gold = STARTER_GOLD;
@@ -7,6 +8,7 @@ TheGuild::TheGuild()
     missions = std::vector<Mission>();
 }
 
+// Loads the guild data from a JSON file at the given path
 TheGuild::TheGuild(std::string &path)
 {
     std::ifstream file(path.c_str());
@@ -27,8 +29,10 @@ TheGuild::TheGuild(std::string &path)
     
 }
 
+// Saves the guild data to a JSON file at the given path (overwrites existing file)
 void TheGuild::saveGuild(const char *path)
 {
+    Debug::dbg << "Saving guild to file: " << path << "\n";
     std::ofstream file(path);
     nlohmann::json jsonGuild;
     jsonGuild["gold"] = gold;
@@ -45,7 +49,7 @@ void TheGuild::saveGuild(const char *path)
         jsonGuild["missions"].push_back(jsonMission);
     }
     
-    file << jsonGuild.dump();
+    file << jsonGuild.dump(2);
     file.close();
 }
 
@@ -53,16 +57,20 @@ void TheGuild::saveGuild(const char *path)
 // (Note: returning pointer to element in vector, so be careful with vector modifications)
 std::optional<Adventurer*> TheGuild::getAdventurerByName(std::string &name)
 {
+    Debug::dbg << "Searching for adventurer by name: '" << name << "'...";
     for (auto &el : adventurers)
     {
         if (el.name == name)
         {
+            Debug::dbg << "found!\n";
             return &el;
         }
     }
+    Debug::dbg << "not found.\n";
     return {};
 }
 
+// Returns a vector of all adventurer names in the guild
 std::vector<std::string> TheGuild::adventurerNames()
 {
     std::vector<std::string> names;

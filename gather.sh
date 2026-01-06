@@ -1,1 +1,1 @@
-./buid/the-gatherer
+./build/the-gatherer

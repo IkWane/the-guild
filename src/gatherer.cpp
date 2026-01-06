@@ -3,8 +3,10 @@
 #include "json.hpp"
 #include <map>
 
+// Gathers all the tags used in the data/characteristics JSON files
 int main()
 {
+    Debug::initDebug("logs/gatherer_log.txt");
     std::unordered_map<std::string, int> tag_map;
     for (auto path : FileManager::getFilesInDirectory("data/characteristics"))
     {

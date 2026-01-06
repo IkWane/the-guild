@@ -35,7 +35,7 @@
     },
     "feeble": {
         "benefit":-1,
-        "weight":33,
+        "weight":6,
         "perception":2,
         "strength":-10,
         "fortitude":-15,
@@ -54,10 +54,7 @@
             "water",
             "water",
             "water",
-            "water",
-            "humid",
-            "humid",
-            "humid"
+            "water"
         ]
     },
     "leg_crippled": {
@@ -80,9 +77,133 @@
     },
     "very_strong": {
         "benefit":1,
-        "weight":5,
+        "weight":10,
         "strength":40,
         "agility":10,
+        "strengths":[
+            "blunt",
+            "pierce"
+        ]
+    },
+    "keen_vision": {
+        "benefit":1,
+        "weight":25,
+        "perception":15,
+        "wisdom":5,
+        "strengths":[
+            "ranged",
+            "stealth",
+            "illusion"
+        ]
+    },
+    "iron_will": {
+        "benefit":1,
+        "weight":30,
+        "willpower":20,
+        "fortitude":10,
+        "strengths":[
+            "mental",
+            "fear"
+        ]
+    },
+    "sage": {
+        "benefit":1,
+        "weight":10,
+        "wisdom":15,
+        "magic":10,
+        "willpower":5,
+        "strengths":[
+            "puzzle",
+            "illusion",
+            "mental",
+            "trap"
+        ]
+    },
+    "giga_chad": {
+        "benefit":1,
+        "weight":1,
+        "strength":100,
+        "agility":50,
+        "fortitude":75,
+        "willpower":50,
+        "perception":30,
+        "wisdom":25,
+        "magic":20,
+        "strengths":[
+            "mental",
+            "fear",
+            "ranged",
+            "stealth",
+            "puzzle",
+            "illusion",
+            "trap",
+            "blunt",
+            "pierce"
+        ]
+    },
+    "night_vision": {
+        "benefit":1,
+        "weight":40,
+        "perception":10,
+        "wisdom":5,
+        "strengths":[
+            "stealth",
+            "illusion"
+        ]
+    },
+    "water_breathing": {
+        "benefit":1,
+        "weight":33,
+        "fortitude":5,
+        "agility":2,
+        "strengths":[
+            "water",
+            "water",
+            "water"
+        ]
+    },
+    "fire_resistant": {
+        "benefit":1,
+        "weight":33,
+        "fortitude":5,
+        "strengths":[
+            "fire",
+            "fire"
+        ]
+    },
+    "disease_resistant": {
+        "benefit":1,
+        "weight":33,
+        "fortitude":5,
+        "strengths":[
+            "disease",
+            "disease"
+        ]
+    },
+    "poison_resistant": {
+        "benefit":1,
+        "weight":33,
+        "fortitude":5,
+        "strengths":[
+            "poison",
+            "poison"
+        ]
+    },
+    "cold_resistant": {
+        "benefit":1,
+        "weight":33,
+        "fortitude":5,
+        "strengths":[
+            "cold",
+            "cold"
+        ]
+    },
+    "muscular": {
+        "benefit":1,
+        "weight":15,
+        "strength":20,
+        "agility":5,
+        "fortitude":10,
         "strengths":[
             "blunt",
             "pierce"

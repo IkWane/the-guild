@@ -36,6 +36,7 @@ void Adventurer::resetStats()
     stats.weaknesses = std::vector<std::string>();
 }
 
+// Updates the adventurer's level based on their stats
 void Adventurer::updateLevel()
 {
     Debug::dbg << "Updating level for adventurer: " << name << "\n";
@@ -50,6 +51,61 @@ void Adventurer::updateLevel()
     ) + stats.strengths.size() - stats.weaknesses.size();
     Debug::dbg << "Total stat points: " << points << "\n";
     level = int(sqrt(std::max(points, 1)));
+}
+
+// makes sure stats are within acceptable bounds
+void Adventurer::balanceStats()
+{
+    Debug::dbg << "Balancing stats for adventurer: " << name << "\n";
+    stats.strength = std::max(1, stats.strength); // normal stats must be at least 1 -> basic abilities
+    stats.agility = std::max(1, stats.agility);
+    stats.fortitude = std::max(1, stats.fortitude);
+    stats.willpower = std::max(1, stats.willpower);
+    stats.perception = std::max(1, stats.perception);
+    stats.wisdom = std::max(1, stats.wisdom);
+    stats.magic = std::max(0, stats.magic); // magic can be 0 -> no magic ability
+}
+
+// removes strength and weaknesses so they don't overlap
+void Adventurer::balanceStrengthsAndWeaknesses()
+{
+    Debug::dbg << "Balancing strengths and weaknesses for adventurer: " << name << "\n";
+    std::vector<std::string> balancedStrengths;
+    std::vector<std::string> balancedWeaknesses;
+    for (auto &strength : stats.strengths)
+    {
+        bool isBalanced = false;
+        for (auto &weakness : stats.weaknesses)
+        {
+            if (strength == weakness)
+            {
+                isBalanced = true;
+                break;
+            }
+        }
+        if (!isBalanced)
+        {
+            balancedStrengths.push_back(strength);
+        }
+    }
+    for (auto &weakness : stats.weaknesses)
+    {
+        bool isBalanced = false;
+        for (auto &strength : stats.strengths)
+        {
+            if (weakness == strength)
+            {
+                isBalanced = true;
+                break;
+            }
+        }
+        if (!isBalanced)
+        {
+            balancedWeaknesses.push_back(weakness);
+        }
+    }
+    stats.strengths = balancedStrengths;
+    stats.weaknesses = balancedWeaknesses;
 }
 
 // Converts adventurer data to json format
@@ -76,24 +132,32 @@ nlohmann::json Adventurer::toJson()
     return nlohmann::json(obj_values);
 }
 
+// Creates a character card (text-based) for the adventurer
+// Output is a vector of strings, each string being a line
 std::vector<std::string> Adventurer::toCharacterCard()
 {
+    const int len = 28;
     Debug::dbg << "Creating character card for adventurer: " << name << "\n";
     std::vector<std::string> card = {
-             std::string("/--------------------------\\"),
-        gameUtil::fitStr("| Name: " + name, 27) + "|",
-        gameUtil::fitStr("| Race: " + race, 27) + "|",
-        gameUtil::fitStr("| Class: " + gameClass, 27) + "|",
-        gameUtil::fitStr("| Level: " + std::to_string(level), 27) + "|",
-        gameUtil::fitStr("| Stats: ", 27) + "|",
-        gameUtil::fitStr("|  Strength: " + std::to_string(stats.strength), 27) + "|",
-        gameUtil::fitStr("|  Agility: " + std::to_string(stats.agility), 27) + "|",
-        gameUtil::fitStr("|  Fortitude: " + std::to_string(stats.fortitude), 27) + "|",
-        gameUtil::fitStr("|  Willpower: " + std::to_string(stats.willpower), 27) + "|",
-        gameUtil::fitStr("|  Perception: " + std::to_string(stats.perception), 27) + "|",
-        gameUtil::fitStr("|  Wisdom: " + std::to_string(stats.wisdom), 27) + "|",
-        gameUtil::fitStr("|  Magic: " + std::to_string(stats.magic), 27) + "|",
-             std::string("\\--------------------------/")
+             gameUtil::fitStr("/", len-1, '-') + "\\",
+        gameUtil::fitStr("| Name: " + name, len-1) + "|",
+        gameUtil::fitStr("| Race: " + race, len-1) + "|",
+        gameUtil::fitStr("| Class: " + gameClass, len-1) + "|",
+        gameUtil::fitStr("| Level: " + std::to_string(level), len-1) + "|",
+        gameUtil::fitStr("| Stats: ", len-1) + "|",
+        gameUtil::fitStr("|  Strength: " + std::to_string(stats.strength), len-1) + "|",
+        gameUtil::fitStr("|  Agility: " + std::to_string(stats.agility), len-1) + "|",
+        gameUtil::fitStr("|  Fortitude: " + std::to_string(stats.fortitude), len-1) + "|",
+        gameUtil::fitStr("|  Willpower: " + std::to_string(stats.willpower), len-1) + "|",
+        gameUtil::fitStr("|  Perception: " + std::to_string(stats.perception), len-1) + "|",
+        gameUtil::fitStr("|  Wisdom: " + std::to_string(stats.wisdom), len-1) + "|",
+        gameUtil::fitStr("|  Magic: " + std::to_string(stats.magic), len-1) + "|",
+        gameUtil::fitStr("| Modifiers: ", len-1) + "|"
     };
+    for (auto &mod : modifiers)
+    {
+        card.push_back(gameUtil::fitStr("|  " + gameUtil::snakeToNormal(mod, true), len-1) + "|");
+    }
+    card.push_back(gameUtil::fitStr("\\", len-1, '-') + "/");
     return card;
 }

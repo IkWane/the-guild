@@ -7,7 +7,8 @@ int main()
 {
     try
     {
-        Debug::initDebug("log.txt");
+        Debug::initDebug("logs/game_log.txt");
+        Debug::dbg << std::string("\\").length() << "\n";
         Game game = Game();
         game.run();
     }

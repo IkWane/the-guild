@@ -7,6 +7,16 @@
         "willpower":4,
         "perception":4,
         "wisdom":3,
-        "magic":2
+        "magic":2,
+        "strengths": [
+            "pierce",
+            "blunt",
+            "ranged"
+        ],
+        "weaknesses": [
+            "fire",
+            "cold",
+            "disease"
+        ]
     }
 }
