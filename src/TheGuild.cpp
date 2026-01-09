@@ -1,21 +1,31 @@
 #include "TheGuild.hpp"
 
-// Initializes a new guild with starter gold and empty adventurer and mission lists
 TheGuild::TheGuild()
 {
+    this->name = "New Guild";
     gold = STARTER_GOLD;
+    adventurers = std::vector<Adventurer>();
+    missions = std::vector<Mission>();
+    phase = 0;
+}
+
+// Initializes a new guild with starter gold and empty adventurer and mission lists
+TheGuild::TheGuild(std::string name)
+{
+    this->name = name;
+    gold = STARTER_GOLD;
+    phase = 0;
     adventurers = std::vector<Adventurer>();
     missions = std::vector<Mission>();
 }
 
 // Loads the guild data from a JSON file at the given path
-TheGuild::TheGuild(std::string &path)
+TheGuild::TheGuild(const char *path)
 {
-    std::ifstream file(path.c_str());
-    assert(!file.fail() && "Failed to open guild save file.");
-    nlohmann::json jsonGuild;
-    file >> jsonGuild;
+    nlohmann::json jsonGuild = FileManager::loadJson(path);
+    name = jsonGuild["name"].get<std::string>();
     gold = jsonGuild["gold"].get<int>();
+    phase = jsonGuild["phase"].get<int>();
     for (nlohmann::json &jsonAdv : jsonGuild["adventurers"])
     {
         Adventurer adv(jsonAdv);
@@ -26,7 +36,6 @@ TheGuild::TheGuild(std::string &path)
         Mission mission(jsonMission);
         missions.push_back(mission);
     }
-    
 }
 
 // Saves the guild data to a JSON file at the given path (overwrites existing file)
@@ -35,7 +44,9 @@ void TheGuild::saveGuild(const char *path)
     Debug::dbg << "Saving guild to file: " << path << "\n";
     std::ofstream file(path);
     nlohmann::json jsonGuild;
+    jsonGuild["name"] = name;
     jsonGuild["gold"] = gold;
+    jsonGuild["phase"] = phase;
     jsonGuild["adventurers"] = nlohmann::json::array();
     for (Adventurer &adv : adventurers)
     {
@@ -79,4 +90,9 @@ std::vector<std::string> TheGuild::adventurerNames()
         names.push_back(adv.name);
     }
     return names;
+}
+
+void TheGuild::addMission(Mission mission)
+{
+    missions.push_back(mission);
 }

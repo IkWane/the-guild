@@ -7,18 +7,19 @@
 #include "Debug.hpp"
 #include "Stats.hpp"
 #include "Adventurer.hpp"
+#include "WindowManager.hpp"
 
 namespace gameUtil
 {
     int wrapAround(int a, int n);
 
-    int sigmoid(int x, int steepness = 1);
+    float sigmoid(int x, float steepness = 1);
 
-    std::string readStr();
+    std::string readStr(WindowManager &wm);
 
-    int chooseOption(int optionsLen, std::string options[], int defaultChoice = 0, bool giveResult = false);
+    int chooseOption(WindowManager &wm, int optionsLen, std::string options[], int defaultChoice = 0, bool giveResult = false);
 
-    int chooseOption(nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
+    int chooseOption(WindowManager &wm, nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
 
     std::string snakeToNormal(std::string &str, bool upperFirst = false);
 
@@ -26,5 +27,5 @@ namespace gameUtil
 
     std::string fitStr(std::string str, int length, char fillChar = ' ');
 
-    void renderCards(std::vector<std::vector<std::string>> cardsLines);
+    void renderCards(WindowManager &wm, std::vector<std::vector<std::string>> cardsLines);
 } // namespace gameUtil

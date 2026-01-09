@@ -35,7 +35,7 @@ std::vector<std::string> Mission::toMissionCard()
              gameUtil::fitStr("/", len-1, '-') + "\\",
         gameUtil::fitStr("| Mission: " + description, len-1) + "|",
         gameUtil::fitStr("| Level: " + std::to_string(level), len-1) + "|",
-        gameUtil::fitStr("| Terrain: " + terrainType, len-1) + "|",
+        gameUtil::fitStr("| Terrain: " + gameUtil::snakeToNormal(terrainType, true), len-1) + "|",
         gameUtil::fitStr("| Monsters:", len-1) + "|"
     };
     for (auto &key : monsters_keys)

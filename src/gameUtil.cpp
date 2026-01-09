@@ -10,169 +10,167 @@ int gameUtil::wrapAround(int a, int n)
     return a;  
 }
 
-int gameUtil::sigmoid(int x, int steepness)
+float gameUtil::sigmoid(int x, float steepness)
 {
     return 1 / (1 + exp(-steepness * x));
 }
 
 // Reads a string from ncurses input until Enter is pressed
-std::string gameUtil::readStr()
+std::string gameUtil::readStr(WindowManager &wm)
 {
     std::string input;
+    wm.writePos(wm.current_line, "_");
+    wm.updateWindow();
+    int key = wm.waitForKeyPress();
 
-    nocbreak();
-    echo();
-
-    int ch = getch();
-
-    while (ch != '\n')
+    while (key != '\n')
     {
-        input.push_back(ch);
-        ch = getch();
+        if (key == DEFAULT_KEY_BACKSPACE)
+        {
+            if (!input.empty())
+            {
+                input.pop_back();
+            }
+        }
+        else if (key == DEFAULT_KEY_ESCAPE)
+        {
+            key = wm.waitForKeyPress();
+            if (key == DEFAULT_KEY_SPECIAL_PREFIX)
+            {
+                key = wm.waitForKeyPress();
+                switch (key)
+                {
+                    case DEFAULT_KEY_SCROLL_DOWN:
+                    {
+                        wm.current_line += 1;
+                        wm.updateWindow();
+                        break;
+                    }
+                    case DEFAULT_KEY_SCROLL_UP:
+                    {
+                        wm.current_line -= 1;
+                        wm.updateWindow();
+                        break;
+                    }
+                    default:
+                    break;
+                }
+            }
+            else if (key == DEFAULT_KEY_ESCAPE)
+            {
+                return "";
+            }
+        }
+        else 
+        {
+            input.push_back(key);
+        }
+        
+        wm.writePos(wm.getLastLine(), input + "_");
+        wm.updateWindow();
+        key = wm.waitForKeyPress();
     }
-
-    cbreak();
-    echo();
     
     return input;
 }
 
 // Presents a horizontal choice menu to the player and returns the selected option index
-int gameUtil::chooseOption(int optionsLen, std::string options[], int defaultChoice, bool giveResult)
+int gameUtil::chooseOption(WindowManager &wm, int optionsLen, std::string options[], int defaultChoice, bool giveResult)
 {
+    Debug::dbg << "Presenting horizontal choice menu with " << optionsLen << " options\n";
     int previous_selected = -1;
     int selected = defaultChoice;
-    int x, y;
-    getyx(stdscr, y, x);
+    int line = wm.getLastLine();
     while (true)
     {
         if (previous_selected != selected)
         {
             previous_selected = selected;
-            move(y, 0);
-            clrtoeol();
+            std::string text = "";
             for (int i = 0; i < optionsLen; i++)
             {
                 if (selected == i)
                 {
-                    printw(" > %s < ", options[i].c_str());
+                    text += " > " + options[i] + " < ";
                 }
                 else
                 {
-                    printw("   %s   ", options[i].c_str());
+                    text += "   " + options[i] + "   ";
                 }
             }
-            refresh();
+            wm.writePos(line, text);
+            wm.updateWindow();
         }
 
-        int key = getch();
-        if (key == DEFAULT_KEY_ESCAPE && getch() == DEFAULT_KEY_ARROW_PREFIX)
+        int key = wm.waitForKeyPress();
+        if (key == DEFAULT_KEY_ESCAPE)
         {
-            key = getch();
-            switch (key)
+            key = wm.getInstantKeyPress();
+            Debug::dbg << key << "\n";
+            if (key == DEFAULT_KEY_SPECIAL_PREFIX) {
+                key = wm.waitForKeyPress();
+                switch (key)
+                {
+                    case DEFAULT_KEY_LEFT:
+                        selected -= 1;
+                        selected = wrapAround(selected, optionsLen);
+                        break;
+                    case DEFAULT_KEY_RIGHT:
+                        selected += 1;
+                        selected = wrapAround(selected, optionsLen);
+                        break;
+                    case DEFAULT_KEY_SCROLL_DOWN:
+                    {
+                        wm.current_line += 1;
+                        wm.updateWindow();
+                        break;
+                    }
+                    case DEFAULT_KEY_SCROLL_UP:
+                    {
+                        wm.current_line -= 1;
+                        wm.updateWindow();
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            else if (key == -1)
             {
-                case DEFAULT_KEY_LEFT:
-                    selected -= 1;
-                    selected = wrapAround(selected, optionsLen);
-                    break;
-                case DEFAULT_KEY_RIGHT:
-                    selected += 1;
-                    selected = wrapAround(selected, optionsLen);
-                    break;
-                default:
-                    break;
+                selected = -1;
+                break;
             }
         }
         else if (key == DEFAULT_KEY_ENTER)
         {
             break;
         }
-        else if (key == DEFAULT_KEY_ESCAPE)
-        {
-            selected = -1;
-            break;
-        }
     }
-    move(y, 0);
-    clrtoeol();
     if (giveResult && selected != -1)
     {
-        printw("> %s", options[selected].c_str());
-        move(y+1, 0);
+        wm.writePos(line, "> " + options[selected]);
+    }
+    if (!giveResult)
+    {
+        wm.removeLastLine();
     }
 
-    refresh();
+    wm.updateWindow();
     
     return selected;
 }
 
 // Presents a horizontal choice menu to the player using a JSON array of options and returns the selected option index
-int gameUtil::chooseOption(nlohmann::json options, int defaultChoice, bool giveResult)
+int gameUtil::chooseOption(WindowManager &wm, nlohmann::json options, int defaultChoice, bool giveResult)
 {
-    int previous_selected = -1;
-    int selected = defaultChoice;
-    
-    while (true)
-    {
-        if (previous_selected != selected)
-        {
-            previous_selected = selected;
-            printw("\r");
-            for (int i = 0; i < options.size(); i++)
-            {
-                if (selected == i)
-                {
-                    printw(" > %s < ", options[i].get<std::string>().c_str());
-                }
-                else
-                {
-                    printw("   %s   ", options[i].get<std::string>().c_str());
-                }
-            }
-            refresh();
-        }
+    std::string strOptions[options.size()];
 
-        int key = getch();
-        if (key == DEFAULT_KEY_ESCAPE && getch() == DEFAULT_KEY_ARROW_PREFIX)
-        {
-            key = getch();
-            switch (key)
-            {
-                case DEFAULT_KEY_LEFT:
-                    selected -= 1;
-                    selected = wrapAround(selected, options.size());
-                    break;
-                case DEFAULT_KEY_RIGHT:
-                    selected += 1;
-                    selected = wrapAround(selected, options.size());
-                    break;
-                default:
-                    break;
-            }
-        } 
-        else if (key == DEFAULT_KEY_ENTER)
-        {
-            break;
-        }
-        else if (key == DEFAULT_KEY_ESCAPE)
-        {
-            selected = -1;
-            break;
-        }
+    for (int i = 0; i < options.size(); i++)
+    {
+        strOptions[i] = options[i].get<std::string>();
     }
 
-    int x, y;
-    getyx(stdscr, y, x);
-    move(y, 0);
-    clrtoeol();
-    if (giveResult && selected != -1)
-    {
-        printw("> %s", options[selected].get<std::string>().c_str());
-        move(y+1, 0);
-    }
-    refresh();
-    
-    return selected;
+    return chooseOption(wm, int(options.size()), strOptions, defaultChoice, giveResult);
 }
 
 // Converts a snake_case string to Normal Case (spaces and optional capitalization)
@@ -232,16 +230,26 @@ std::string gameUtil::fitStr(std::string str, int length, char fillChar)
 // Renders multiple text-based cards side by side in the ncurses window
 // Each card is represented as a vector of strings (lines)
 // Cards that don't fit in the current row are passed to a new row recursively
-void gameUtil::renderCards(std::vector<std::vector<std::string>> cardsLines)
+void gameUtil::renderCards(WindowManager &wm, std::vector<std::vector<std::string>> cardsLines)
 {
     Debug::dbg << "Trying to render " << cardsLines.size() << " cards\n";
-    int totalWidth = (cardsLines[0][0].length() + 2) * cardsLines.size();
-    int maxX, maxY;
-    getmaxyx(stdscr, maxY, maxX);
+    int maxWidth;
+    for (auto &cardLines : cardsLines)
+    {
+        maxWidth = std::max(maxWidth, static_cast<int>(cardLines[0].length()));
+    }
+    
+    int totalWidth = (maxWidth + 2) * cardsLines.size();
+    int maxX = wm.getMaxX();
+    int maxY = wm.getMaxY();
+
     std::vector<std::vector<std::string>> extraCardsLines;
+
     int maxCardsPerRow = std::max(1, maxX / int(cardsLines[0][0].length() + 2));
-    int extraCards = cardsLines.size() - maxCardsPerRow;
+    int extraCards = std::max(0, int(cardsLines.size() )- maxCardsPerRow);
+
     Debug::dbg << "Total width of cards: " << totalWidth << ", max screen width: " << maxX << ", extra cards : " << extraCards << "\n";
+
     extraCardsLines = std::vector<std::vector<std::string>>();
     for (int i = 0; i < extraCards; i++)
     {
@@ -256,25 +264,30 @@ void gameUtil::renderCards(std::vector<std::vector<std::string>> cardsLines)
             maxHeight = cardLines.size();
         }
     }
+
     Debug::dbg << "Rendering " << cardsLines.size() << " cards with max height " << maxHeight << "\n";
+
     for (int i = 0; i < maxHeight; i++)
     {
+        std::string output = "";
         for (auto &cardLines : cardsLines)
         {
             if (i < cardLines.size())
             {
-                printw("%s  ", cardLines[i].c_str());
+                output += cardLines[i] + "  ";
             }
             else
             {
-                printw("%s  ", gameUtil::fitStr("", cardLines[0].length()).c_str());
+                output += gameUtil::fitStr("", cardLines[0].length()) + "  ";
             }
         }
-        printw("\n");
+        wm.writeNewLine(output);
     }
+    wm.updateWindow();
+
     if (extraCardsLines.size() > 0)
     {
-        printw("\n");
-        renderCards(extraCardsLines);
+        wm.writeNewLine();
+        renderCards(wm, extraCardsLines);
     }
 }

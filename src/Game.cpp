@@ -5,12 +5,8 @@
 Game::Game()
 {
     Debug::dbg << "Initializing window and RNG\n";
-    RNG::get(0);
-    window = initscr();
-
-    cbreak();
-    noecho();
-    scrollok(window, TRUE);
+    RNG::get(std::time(nullptr));
+    wm = WindowManager();
 
     nlohmann::json config = FileManager::loadJson("data/config.json");
 
@@ -50,53 +46,50 @@ Game::Game()
     Debug::dbg << "Starting new or loading existing game\n";
     giveDialog("Iintro");
 
-    bool invalidFile = true;
-    bool triedStandardName = false;
     bool newGame = false;
-    
-    while (invalidFile)
+
+    int choice = giveDialog("QhasSaveFile");
+
+    switch (choice)
     {
-        int choice = giveDialog("QhasSaveFile");
-        switch (choice)
-        {
         case 0:
-            if (triedStandardName)
+        {
+            bool invalidFile = true;
+            while (invalidFile)
             {
-                saveFileName = textEntryDialog("EfileName");
+                Debug::dbg << "Asking for save file name to load\n";
+                saveFileName = textEntryDialog("EfileName") + ".json";
+                Debug::dbg << "Checking if file exists: " << saveFileName << "\n";
                 std::ifstream testFile(saveFileName.c_str());
+                Debug::dbg << "File open status: " << testFile.fail() << "\n";
                 invalidFile = testFile.fail();
                 if (invalidFile)
                 {
                     giveDialog("IfileSearchError");
                 }
-            }
-            else
-            {
-                saveFileName = "savefile.json";
-                std::ifstream testFile(saveFileName.c_str());
-                invalidFile = testFile.fail();
-                if (invalidFile)
+                else
                 {
-                    giveDialog("InoStandardSaveFile");
+                    testFile.close();
                 }
-                triedStandardName = true;
             }
-            break;
-        case 1:
-            saveFileName = "savefile.json";
-            invalidFile = false;
-            newGame = true;
-            break;
-        default:
             break;
         }
+        case 1:
+        {
+            Debug::dbg << "Asking for save file name to create new game\n";
+            saveFileName = textEntryDialog("EfileName") + ".json";
+            newGame = true;
+            break;
+        }
+        default:
+            break;
     }
 
     if (!newGame)
     {
         try
         {
-            guild = TheGuild(saveFileName);
+            guild = TheGuild(saveFileName.c_str());
         }
         catch (...)
         {
@@ -106,7 +99,7 @@ Game::Game()
     }
     else
     {
-        guild = TheGuild();
+        guild = TheGuild(saveFileName);
     }
 }
 
@@ -115,14 +108,12 @@ void Game::run()
 {
     Debug::dbg << "Running game loop\n";
 
+    guild.adventurers.push_back(newRandomAdventurer());
+    guild.adventurers.push_back(newRandomAdventurer());
+    guild.adventurers.push_back(newRandomAdventurer());
+    guild.adventurers.push_back(newRandomAdventurer());
     
-    guild.adventurers.push_back(newRandomAdventurer());
-    guild.adventurers.push_back(newRandomAdventurer());
-    guild.adventurers.push_back(newRandomAdventurer());
-    guild.adventurers.push_back(newRandomAdventurer());
-    renderCharacters(guild.adventurerNames());
-    
-    Mission mission = newRandomMission(1);
+    Mission mission = newRandomMission(20);
     std::vector<std::string> advNames = guild.adventurerNames();
     mission.assignedAdventurers.insert(
         mission.assignedAdventurers.end(), 
@@ -130,61 +121,83 @@ void Game::run()
         advNames.end()
     );
 
-    guild.missions.push_back(mission);
-    renderMissions(guild.missions);
-    bool success = determineSuccess(mission);
-    if (success)
-    {
-        printw("Mission succeeded!\n");
-    }
-    else
-    {
-        printw("Mission failed!\n");
-    }
-    
-    getch();
+    guild.addMission(mission);
 
-    // printw("Current Guild gold: %d\n", guild.gold);
+    giveDialog("QRandomStuff", true);
+    
+    giveDialog("QendDemo");
+
+    // wprintw(pad, "Current Guild gold: %d\n", guild.gold);
     // guild.gold += numberDialog("NdepositGold");
-    // printw("Guild gold: %d\n", guild.gold);
+    // wprintw(pad, "Guild gold: %d\n", guild.gold);
 
     exitGame(true);
 }
 
 // sends a dialog to the player based on the data found at dialogName in the data/dialogs.json file
-int Game::giveDialog(const char *dialogName)
+int Game::giveDialog(const char *dialogName, bool showHome, bool canQuit)
 {
     Debug::dbg << "Giving dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
 
     if (dialog.contains("text"))
     {
-        printw("%s\n", dialog["text"].get<std::string>().c_str());
+        wm.writeNewLine(dialog["text"].get<std::string>());
     }
     if (dialog.contains("choices"))
     {
+        wm.writeNewLine();
         int option = -1;
+        std::vector<std::string> options;
+        for (int i = 0; i < dialog["choices"].size(); i++)
+        {
+            options.push_back(dialog["choices"][i].get<std::string>());
+        }
+        if (showHome)
+        {
+            options.push_back("Home");
+        }
+        
         while (option == -1)
         {
             option = gameUtil::chooseOption(
-                dialog["choices"], 
+                wm,
+                options, 
                 dialog.contains("defaultChoice") ? dialog["defaultChoice"].get<int>() : 0, 
                 true
             );
             if (option == -1)
             {
-                int quitChoice = giveDialog("QquitGame");
-                if (quitChoice == 0)
+                if (canQuit)
                 {
-                    exitGame();
+                    wm.removeLastLine();
+                    int quitChoice = giveDialog("QquitGame", false, false);
+                    if (quitChoice == 0)
+                    {
+                        exitGame(false);
+                    } 
+                    else if (quitChoice == 1)
+                    {
+                        exitGame();
+                    }
+                    else
+                    {
+                        wm.writeNewLine(dialog["text"].get<std::string>());
+                        wm.writeNewLine();
+                        option = -1;
+                    }
                 }
-                else
-                {
-                    printw("%s\n", dialog["text"].get<std::string>().c_str());
-                    option = -1;
-                }
+                
+            }
+            else if (option == options.size()-1 && showHome)
+            {
+                this->showHome();
+                wm.writeNewLine(dialog["text"].get<std::string>());
+                wm.writeNewLine();
+                option = -1;
             }
         }
+        Debug::dbg << "Player selected option " << option << " : " << dialog["choices"][option] << "\n";
         return option;
     }     
     return -1;
@@ -194,7 +207,7 @@ int Game::numberDialog(const char *dialogName)
 {
     Debug::dbg << "Giving number dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
-    printw("%s\n", dialog["text"].get<std::string>().c_str());
+    wm.writeNewLine(dialog["text"].get<std::string>());
     int min, max;
     if (dialog.contains("min"))
     {
@@ -219,7 +232,7 @@ int Game::numberDialog(const char *dialogName)
     while (selected != 3)
     {
         list[3] = std::to_string(number);
-        selected = gameUtil::chooseOption(7, list, selected);
+        selected = gameUtil::chooseOption(wm, 7, list, selected);
         switch (selected)
         {
         case -1:
@@ -227,11 +240,15 @@ int Game::numberDialog(const char *dialogName)
                 int quitChoice = giveDialog("QquitGame");
                 if (quitChoice == 0)
                 {
+                    exitGame(false);
+                }
+                else if (quitChoice == 1)
+                {
                     exitGame();
                 }
                 else
                 {
-                    printw("\n%s\n", dialog["text"].get<std::string>().c_str());
+                    wm.writeNewLine(dialog["text"].get<std::string>());
                 }
             }
             selected = 0;
@@ -265,7 +282,7 @@ int Game::numberDialog(const char *dialogName)
         }
     }
     number = std::clamp(number, min, max);
-    printw("> %d\n", number);
+    wm.writeNewLine("> " + std::to_string(number));
     return number;
 }
 
@@ -273,8 +290,30 @@ std::string Game::textEntryDialog(const char *dialogName)
 {
     Debug::dbg << "Giving text entry dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
-    printw("%s\n", dialog["text"].get<std::string>().c_str());
-    std::string input = gameUtil::readStr();
+    wm.writeNewLine(dialog["text"].get<std::string>());
+    wm.writeNewLine();
+    wm.updateWindow();
+    std::string input = gameUtil::readStr(wm);
+    while (input.empty())
+    {
+        wm.removeLastLine();
+        int quitChoice = giveDialog("QquitGame");
+        if (quitChoice == 0)
+        {
+            exitGame(false);
+        } 
+        else if (quitChoice == 1)
+        {
+            exitGame();
+        }
+        else
+        {
+            wm.writeNewLine();
+            wm.writeNewLine(dialog["text"].get<std::string>());
+            wm.writeNewLine();
+            input = gameUtil::readStr(wm);
+        }
+    }
     return input;
 }
 
@@ -292,14 +331,12 @@ void Game::exitGame(bool save)
     {
         guild.saveGuild(saveFileName.c_str());
     }
-    endwin();
     throw GameExit(0);
 }
 
 Game::~Game()
 {
     Debug::dbg << "Destroying game instance\n";
-    endwin();
 }
 
 // creates a new adventurer with randomized traits
@@ -325,7 +362,7 @@ Adventurer Game::newRandomAdventurer()
     {
         int drawn = -1;
         while (drawn == -1) {
-            int rand = rng.weightedInt(0, adventurer_modifiers.size() - 1, adventurer_modifiers_weights);
+            int rand = rng.weightedInt(0, adventurer_modifiers.size(), adventurer_modifiers_weights);
             bool contains = false;
             for (int j = 0; j < i+1; j++)
             {
@@ -346,9 +383,9 @@ Adventurer Game::newRandomAdventurer()
         adv.modifiers.push_back(adventurer_modifiers_keys[drawn]);
     }
 
-    adv.race = races_keys[rng.weightedInt(0, races.size()-1, races_weights)];
+    adv.race = races_keys[rng.weightedInt(0, races.size(), races_weights)];
     Debug::dbg << "Drawn race: " << adv.race << "\n";
-    adv.gameClass = classes_keys[rng.weightedInt(0, classes.size()-1, classes_weights)];
+    adv.gameClass = classes_keys[rng.weightedInt(0, classes.size(), classes_weights)];
     Debug::dbg << "Drawn class: " << adv.gameClass << "\n";
 
     updateAdventurerStatus(adv);
@@ -435,7 +472,7 @@ Mission Game::newRandomMission(int level)
         
         while (current_level != level)
         {
-            int rand = rng.weightedInt(0, monsters.size() - 1, monsters_levels);
+            int rand = rng.weightedInt(0, monsters.size(), monsters_levels);
             if (current_level + monsters_levels[rand] < level)
             {
                 std::string &key = monsters_keys[rand];
@@ -478,13 +515,13 @@ Mission Game::newRandomMission(int level)
             
         }
         Mission mission(std::string("Elimination quest"), current_level, mission_monsters, mission_monsters_keys);
-        mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size() - 1, terrain_types_weights)];
+        mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size(), terrain_types_weights)];
         return mission;
     }
     else
     {
         Mission mission(std::string("Training quest"), level, std::map<std::string, int>(), std::vector<std::string>());
-        mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size() - 1, terrain_types_weights)];
+        mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size(), terrain_types_weights)];
         return mission;
     }
 }
@@ -593,7 +630,7 @@ bool Game::determineSuccess(Mission &mission)
     Stats monsterStats = calculateMonstersStats(mission);
     Stats teamStats = calculateTeamStats(mission);
     int points = calculatePoints(teamStats, monsterStats, mission.terrainType);
-    int probability = gameUtil::sigmoid(points, 0.1);
+    int probability = gameUtil::sigmoid(points, 0.1) * 100;
     Debug::dbg << "Mission success probability: " << probability << "\n";
     int roll = getDiceRoll(100);
     Debug::dbg << "Mission roll: " << roll << "\n";
@@ -698,16 +735,48 @@ void Game::renderCharacters(std::vector<std::string> adventurers)
             cardsLines.push_back(advOpt.value()->toCharacterCard());
         }
     }
-    gameUtil::renderCards(cardsLines);
+    gameUtil::renderCards(wm, cardsLines);
+}
+
+void Game::renderCharacters()
+{
+    std::vector<std::vector<std::string>> cardsLines;
+    for (auto &adv : guild.adventurers)
+    {
+        cardsLines.push_back(adv.toCharacterCard());
+    }
+    gameUtil::renderCards(wm, cardsLines);
 }
 
 // renders the mission cards of the given missions side by side
-void Game::renderMissions(std::vector<Mission> missions)
+void Game::renderMissions(std::vector<Mission> &missions)
 {
     std::vector<std::vector<std::string>> cardsLines;
     for (auto &mission : missions)
     {
         cardsLines.push_back(mission.toMissionCard());
     }
-    gameUtil::renderCards(cardsLines);
+    gameUtil::renderCards(wm, cardsLines);
+}
+
+void Game::showHome()
+{
+    int choice = giveDialog("QHome", false);
+    switch (choice)
+    {
+    case 0:
+        wm.writeNewLine("Current Balance : " + std::to_string(guild.gold));
+        break;
+    
+    case 1:
+        renderCharacters();
+        break;
+    
+    case 2:
+        renderMissions(guild.missions);
+        break;
+    
+    default:
+        break;
+    }
 }

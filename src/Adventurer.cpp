@@ -26,7 +26,7 @@ void Adventurer::resetStats()
 {
     Debug::dbg << "Resetting stats for adventurer: " << name << "\n";
     stats.strength = 0;
-    stats.agility = 0;    
+    stats.agility = 0;
     stats.fortitude = 0;
     stats.willpower = 0;
     stats.perception = 0;
@@ -136,28 +136,42 @@ nlohmann::json Adventurer::toJson()
 // Output is a vector of strings, each string being a line
 std::vector<std::string> Adventurer::toCharacterCard()
 {
-    const int len = 28;
     Debug::dbg << "Creating character card for adventurer: " << name << "\n";
+    //  gameUtil::fitStr("/", len-1, '-') + "\\",
     std::vector<std::string> card = {
-             gameUtil::fitStr("/", len-1, '-') + "\\",
-        gameUtil::fitStr("| Name: " + name, len-1) + "|",
-        gameUtil::fitStr("| Race: " + race, len-1) + "|",
-        gameUtil::fitStr("| Class: " + gameClass, len-1) + "|",
-        gameUtil::fitStr("| Level: " + std::to_string(level), len-1) + "|",
-        gameUtil::fitStr("| Stats: ", len-1) + "|",
-        gameUtil::fitStr("|  Strength: " + std::to_string(stats.strength), len-1) + "|",
-        gameUtil::fitStr("|  Agility: " + std::to_string(stats.agility), len-1) + "|",
-        gameUtil::fitStr("|  Fortitude: " + std::to_string(stats.fortitude), len-1) + "|",
-        gameUtil::fitStr("|  Willpower: " + std::to_string(stats.willpower), len-1) + "|",
-        gameUtil::fitStr("|  Perception: " + std::to_string(stats.perception), len-1) + "|",
-        gameUtil::fitStr("|  Wisdom: " + std::to_string(stats.wisdom), len-1) + "|",
-        gameUtil::fitStr("|  Magic: " + std::to_string(stats.magic), len-1) + "|",
-        gameUtil::fitStr("| Modifiers: ", len-1) + "|"
+        std::string("| Name: " + name),
+        std::string("| Race: " + race),
+        std::string("| Class: " + gameClass),
+        std::string("| Level: " + std::to_string(level)),
+        std::string("| Stats: "),
+        std::string("|  Strength: " + std::to_string(stats.strength)),
+        std::string("|  Agility: " + std::to_string(stats.agility)),
+        std::string("|  Fortitude: " + std::to_string(stats.fortitude)),
+        std::string("|  Willpower: " + std::to_string(stats.willpower)),
+        std::string("|  Perception: " + std::to_string(stats.perception)),
+        std::string("|  Wisdom: " + std::to_string(stats.wisdom)),
+        std::string("|  Magic: " + std::to_string(stats.magic)),
+        std::string("| Modifiers: ")
     };
     for (auto &mod : modifiers)
     {
-        card.push_back(gameUtil::fitStr("|  " + gameUtil::snakeToNormal(mod, true), len-1) + "|");
+        card.push_back(std::string("|  " + gameUtil::snakeToNormal(mod, true)));
     }
+    int len = 0;
+    for (auto &line : card)
+    {
+        if (len < int(line.length()))
+        {
+            len = int(line.length());
+        }
+    }
+    len += 2; // padding
+    for (auto &line : card)
+    {
+        line = gameUtil::fitStr(line, len-1) + "|";
+    }
+    
+    card.insert(card.begin(), gameUtil::fitStr("/", len-1, '-') + "\\");
     card.push_back(gameUtil::fitStr("\\", len-1, '-') + "/");
     return card;
 }

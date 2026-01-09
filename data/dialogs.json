@@ -9,6 +9,15 @@
             "Family."
         ]
     },
+    "QHome": {
+        "text": "Home : Select which information you want to consult",
+        "choices": [
+            "Money",
+            "Adventurers",
+            "Running Missions",
+            "Cancel"
+        ]
+    },
     "Iintro": {
         "text": "Welcome to The Guild !"
     },
@@ -20,7 +29,7 @@
         ]
     },
     "EfileName": {
-        "text": "Enter the name of your save file :"
+        "text": "Enter the name of your save file (without extension):"
     },
     "NdepositGold": {
         "text": "How much gold do you want to deposit to your guild's treasury ?"
@@ -31,14 +40,26 @@
     "IfileLoadError": {
         "text": "Error loading save file. Starting a new game."
     },
-    "InoStandardSaveFile": {
-        "text": "No standard save file found. Retrying..."
+    "QRandomStuff":{
+        "text": "Blah Blah adventurer woo show me what you got bitch",
+        "choices":[
+            "This",
+            "Is",
+            "Placeholder"
+        ]
     },
     "QquitGame": {
         "text": "Do you wish to quit the game ?",
         "choices": [
             "Quit",
+            "Quit and Save",
             "Cancel"
+        ]
+    },
+    "QendDemo": {
+        "text": "You have reached the end of this demo. Thank you for playing !",
+        "choices": [
+            "Exit"
         ]
     }
 }

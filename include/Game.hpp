@@ -9,12 +9,14 @@
 #include "Debug.hpp"
 #include <algorithm>
 #include "GameExit.hpp"
+#include <ctime>
+#include "WindowManager.hpp"
 
 class Game {
 public:
     Game();
     void run();
-    int giveDialog(const char *dialogName);
+    int giveDialog(const char *dialogName, bool showHome = false, bool canQuit = true);
     int numberDialog(const char *dialogName);
     std::string textEntryDialog(const char *dialogName);
     int getDiceRoll(int max);
@@ -29,9 +31,11 @@ public:
     bool determineSuccess(Mission &mission);
     int calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &terrainType);
     void renderCharacters(std::vector<std::string> adventurers);
-    void renderMissions(std::vector<Mission> missions);
+    void renderCharacters();
+    void renderMissions(std::vector<Mission> &missions);
+    void showHome();
 private:
-    WINDOW *window;
+    WindowManager wm;
     nlohmann::json dialogs;
     nlohmann::json adventurer_names;
     nlohmann::json adventurer_modifiers;
