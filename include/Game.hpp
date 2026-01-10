@@ -11,6 +11,7 @@
 #include "GameExit.hpp"
 #include <ctime>
 #include "WindowManager.hpp"
+#include "MissionResult.hpp"
 
 class Game {
 public:
@@ -28,12 +29,16 @@ public:
     Mission newRandomMission(int level);
     Stats calculateMonstersStats(Mission &mission);
     Stats calculateTeamStats(Mission &mission);
-    bool determineSuccess(Mission &mission);
+    MissionResult determineSuccess(Mission &mission);
+    std::vector<std::string> determineSurvival(Mission &mission, Stats &monsterStats, bool success);
     int calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &terrainType);
+    void finishMission(Mission &mission);
     void renderCharacters(std::vector<std::string> adventurers);
     void renderCharacters();
     void renderMissions(std::vector<Mission> &missions);
     void showHome();
+    void giveModWithBenefit(Adventurer &adv, int benefit);
+    std::vector<std::string> toMissionCard(Mission &mission);
 private:
     WindowManager wm;
     nlohmann::json dialogs;

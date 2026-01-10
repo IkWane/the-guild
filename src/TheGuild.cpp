@@ -66,12 +66,12 @@ void TheGuild::saveGuild(const char *path)
 
 // Returns an adventurer pointer if found, else returns empty optional.
 // (Note: returning pointer to element in vector, so be careful with vector modifications)
-std::optional<Adventurer*> TheGuild::getAdventurerByName(std::string &name)
+std::optional<Adventurer*> TheGuild::getAdventurerByIdentifier(std::string &identifier)
 {
     Debug::dbg << "Searching for adventurer by name: '" << name << "'...";
     for (auto &el : adventurers)
     {
-        if (el.name == name)
+        if (el.identifier == identifier)
         {
             Debug::dbg << "found!\n";
             return &el;
@@ -81,18 +81,62 @@ std::optional<Adventurer*> TheGuild::getAdventurerByName(std::string &name)
     return {};
 }
 
+void TheGuild::removeAdventurerByIdentifier(std::string &identifier)
+{
+    Debug::dbg << "trying to remove adventurer by name: '" << name << "'...";
+    for (int i = 0; i < adventurers.size(); i++)
+    {
+        if (adventurers[i].identifier == identifier)
+        {
+            adventurers.erase(adventurers.begin() + i);
+            Debug::dbg << "removed!\n";
+            return;
+        }
+    }
+    Debug::dbg << "not found.\n";
+}
+
+void TheGuild::removeMissionByIdentifier(Mission &mission)
+{
+    Debug::dbg << "trying to remove mission...";
+    int i = 0;
+    for (auto &otherMission : missions)
+    {
+        if (otherMission.identifier == mission.identifier)
+        {
+            missions.erase(missions.begin() + i);
+            Debug::dbg << "removed!\n";
+            return;
+        }
+        i++;
+    }
+    
+    Debug::dbg << "not found.\n";
+}
+
 // Returns a vector of all adventurer names in the guild
-std::vector<std::string> TheGuild::adventurerNames()
+std::vector<std::string> TheGuild::adventurerIdentifiers()
 {
     std::vector<std::string> names;
     for (const auto &adv : adventurers)
     {
-        names.push_back(adv.name);
+        names.push_back(adv.identifier);
     }
     return names;
 }
 
 void TheGuild::addMission(Mission mission)
 {
+    Debug::dbg << "Adding mission to guild\n";
     missions.push_back(mission);
+    for (auto &advName : mission.assignedAdventurers)
+    {
+        std::optional<Adventurer*> advOptional = getAdventurerByIdentifier(advName);
+        if (advOptional.has_value())
+        {
+            advOptional.value()->occupied = true;
+            Debug::dbg << advName << "is now occupied\n";
+        }
+    }
+    
 }

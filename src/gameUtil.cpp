@@ -106,7 +106,6 @@ int gameUtil::chooseOption(WindowManager &wm, int optionsLen, std::string option
         if (key == DEFAULT_KEY_ESCAPE)
         {
             key = wm.getInstantKeyPress();
-            Debug::dbg << key << "\n";
             if (key == DEFAULT_KEY_SPECIAL_PREFIX) {
                 key = wm.waitForKeyPress();
                 switch (key)
@@ -174,7 +173,7 @@ int gameUtil::chooseOption(WindowManager &wm, nlohmann::json options, int defaul
 }
 
 // Converts a snake_case string to Normal Case (spaces and optional capitalization)
-std::string gameUtil::snakeToNormal(std::string &str, bool upperFirst)
+std::string gameUtil::snakeToNormal(const std::string &str, bool upperFirst)
 {
     std::string newStr = "";
     for (auto &c : str)
@@ -232,14 +231,17 @@ std::string gameUtil::fitStr(std::string str, int length, char fillChar)
 // Cards that don't fit in the current row are passed to a new row recursively
 void gameUtil::renderCards(WindowManager &wm, std::vector<std::vector<std::string>> cardsLines)
 {
+    if (cardsLines.size() == 0)
+    {
+        return;
+    }
     Debug::dbg << "Trying to render " << cardsLines.size() << " cards\n";
     int maxWidth;
     for (auto &cardLines : cardsLines)
     {
         maxWidth = std::max(maxWidth, static_cast<int>(cardLines[0].length()));
     }
-    
-    int totalWidth = (maxWidth + 2) * cardsLines.size();
+
     int maxX = wm.getMaxX();
     int maxY = wm.getMaxY();
 
@@ -248,7 +250,7 @@ void gameUtil::renderCards(WindowManager &wm, std::vector<std::vector<std::strin
     int maxCardsPerRow = std::max(1, maxX / int(cardsLines[0][0].length() + 2));
     int extraCards = std::max(0, int(cardsLines.size() )- maxCardsPerRow);
 
-    Debug::dbg << "Total width of cards: " << totalWidth << ", max screen width: " << maxX << ", extra cards : " << extraCards << "\n";
+    Debug::dbg << "Max cards per row: " << maxCardsPerRow << ", extra cards : " << extraCards << "\n";
 
     extraCardsLines = std::vector<std::vector<std::string>>();
     for (int i = 0; i < extraCards; i++)
@@ -259,6 +261,21 @@ void gameUtil::renderCards(WindowManager &wm, std::vector<std::vector<std::strin
     int maxHeight = 0;
     for (auto &cardLines : cardsLines)
     {
+        int len = 0;
+        for (auto &line : cardLines)
+        {
+            if (len < int(line.length()))
+            {
+                len = int(line.length());
+            }
+        }
+        len += 3; // padding
+        for (auto &line : cardLines)
+        {
+            line = gameUtil::fitStr("| " + line, len) + "|";
+        }
+        cardLines.insert(cardLines.begin(), gameUtil::fitStr("/", len, '-') + "\\");
+        cardLines.push_back(gameUtil::fitStr("\\", len, '-') + "/");
         if (cardLines.size() > maxHeight)
         {
             maxHeight = cardLines.size();

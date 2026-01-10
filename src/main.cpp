@@ -1,8 +1,5 @@
 #include <ncurses.h>
 #include "Game.hpp"
-#include "Debug.hpp"
-#include "GameExit.hpp"
-#include "WindowManager.hpp"
 
 int main()
 {

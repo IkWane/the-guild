@@ -8,7 +8,9 @@ Mission::Mission(nlohmann::json json)
     monsters = json["monsters"].get<std::map<std::string, int>>();
     terrainType = json["terrain_type"].get<std::string>();
     level = json["level"].get<int>();
+    reward = json["reward"].get<int>();
     assignedAdventurers = json.contains("assigned_adventurers") ? json["assigned_adventurers"].get<std::vector<std::string>>() : std::vector<std::string>();
+    identifier = json["identifier"].get<std::string>();
 }
 
 // Converts Mission to JSON data
@@ -20,28 +22,31 @@ nlohmann::json Mission::toJson()
         {"monsters", monsters},
         {"terrain_type", terrainType},
         {"level", level},
-        {"assigned_adventurers", assignedAdventurers}
+        {"reward", reward},
+        {"assigned_adventurers", assignedAdventurers},
+        {"identifier", identifier}
     };
     return nlohmann::json(obj_values);
 }
 
-// Creates a mission card (text-based) for the mission
-// Output is a vector of strings, each string being a line
-std::vector<std::string> Mission::toMissionCard()
+void Mission::assignAdventurer(Adventurer &adv)
 {
-    const int len = 30;
-    Debug::dbg << "Creating mission card for mission: " << description << "\n";
-    std::vector<std::string> card = {
-             gameUtil::fitStr("/", len-1, '-') + "\\",
-        gameUtil::fitStr("| Mission: " + description, len-1) + "|",
-        gameUtil::fitStr("| Level: " + std::to_string(level), len-1) + "|",
-        gameUtil::fitStr("| Terrain: " + gameUtil::snakeToNormal(terrainType, true), len-1) + "|",
-        gameUtil::fitStr("| Monsters:", len-1) + "|"
-    };
-    for (auto &key : monsters_keys)
+    assignedAdventurers.push_back(adv.identifier);
+    adv.occupied = true;
+}
+
+void Mission::createIdentifier()
+{
+    std::string newIdentifier = (
+        std::to_string(level) +
+        terrainType
+    );
+    for (const auto &[key, value] : monsters)
     {
-        card.push_back(gameUtil::fitStr("|  " + gameUtil::snakeToNormal(key, true) + " x" + std::to_string(monsters[key]), len-1) + "|");
+        for (int i = 0; i < value; i++)
+        {
+            newIdentifier += key;
+        }
     }
-    card.push_back(gameUtil::fitStr("\\", len-1, '-') + "/");
-    return card;
+    identifier = newIdentifier;
 }

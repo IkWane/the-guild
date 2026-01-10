@@ -58,7 +58,7 @@ Game::Game()
             while (invalidFile)
             {
                 Debug::dbg << "Asking for save file name to load\n";
-                saveFileName = textEntryDialog("EfileName") + ".json";
+                saveFileName = "saves/" + textEntryDialog("EfileName") + ".json";
                 Debug::dbg << "Checking if file exists: " << saveFileName << "\n";
                 std::ifstream testFile(saveFileName.c_str());
                 Debug::dbg << "File open status: " << testFile.fail() << "\n";
@@ -77,7 +77,7 @@ Game::Game()
         case 1:
         {
             Debug::dbg << "Asking for save file name to create new game\n";
-            saveFileName = textEntryDialog("EfileName") + ".json";
+            saveFileName = "saves/" + textEntryDialog("EfileName") + ".json";
             newGame = true;
             break;
         }
@@ -114,19 +114,23 @@ void Game::run()
     guild.adventurers.push_back(newRandomAdventurer());
     
     Mission mission = newRandomMission(20);
-    std::vector<std::string> advNames = guild.adventurerNames();
+    std::vector<std::string> advIdentifiers = guild.adventurerIdentifiers();
     mission.assignedAdventurers.insert(
         mission.assignedAdventurers.end(), 
-        advNames.begin(), 
-        advNames.end()
+        advIdentifiers.begin(), 
+        advIdentifiers.end()
     );
 
     guild.addMission(mission);
 
     giveDialog("QRandomStuff", true);
+
+    finishMission(mission);
+
+    giveDialog("QRandomStuff", true);
     
     giveDialog("QendDemo");
-
+    
     // wprintw(pad, "Current Guild gold: %d\n", guild.gold);
     // guild.gold += numberDialog("NdepositGold");
     // wprintw(pad, "Guild gold: %d\n", guild.gold);
@@ -389,6 +393,7 @@ Adventurer Game::newRandomAdventurer()
     Debug::dbg << "Drawn class: " << adv.gameClass << "\n";
 
     updateAdventurerStatus(adv);
+    adv.createIdentifier();
     
     return adv;
 }
@@ -406,7 +411,7 @@ void Game::updateAdventurerStatus(Adventurer &adv)
         updateAdventurerFromJsonKey(adv, key, adventurer_modifiers);
     }
     adv.balanceStats();
-    adv.balanceStrengthsAndWeaknesses();
+    adv.stats.balanceStrengthsAndWeaknesses();
     adv.updateLevel();
 }
 
@@ -466,14 +471,14 @@ Mission Game::newRandomMission(int level)
     RNG &rng = RNG::get();
     if (level >= 5)
     {
-        int current_level = 0;
+        int actual_level = 0;
         std::map<std::string, int> mission_monsters = std::map<std::string, int>();
         std::vector<std::string> mission_monsters_keys = std::vector<std::string>();
         
-        while (current_level != level)
+        while (actual_level != level)
         {
             int rand = rng.weightedInt(0, monsters.size(), monsters_levels);
-            if (current_level + monsters_levels[rand] < level)
+            if (actual_level + monsters_levels[rand] < level)
             {
                 std::string &key = monsters_keys[rand];
                 if (mission_monsters.contains(key))
@@ -485,15 +490,15 @@ Mission Game::newRandomMission(int level)
                     mission_monsters_keys.push_back(key);
                     mission_monsters[key] = 1;
                 }
-                current_level += monsters_levels[rand];
+                actual_level += monsters_levels[rand];
             }
             else
             {
                 int lowest_index = 0;
-                int lowest_value = abs(current_level + monsters_levels[0] - level);
+                int lowest_value = abs(actual_level + monsters_levels[0] - level);
                 for (int i = 1; i < monsters_levels.size(); i++)
                 {
-                    int potential_lowest = abs(current_level + monsters_levels[lowest_index] - level);
+                    int potential_lowest = abs(actual_level + monsters_levels[lowest_index] - level);
                     if (potential_lowest < lowest_value)
                     {
                         lowest_value = potential_lowest;
@@ -514,14 +519,18 @@ Mission Game::newRandomMission(int level)
             }
             
         }
-        Mission mission(std::string("Elimination quest"), current_level, mission_monsters, mission_monsters_keys);
+        int reward = actual_level * GOLD_ELIMINATION_MISSION_LEVEL_MUPLTIPLIER;
+        Mission mission(std::string("Elimination quest"), actual_level, reward, mission_monsters);
         mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size(), terrain_types_weights)];
+        mission.createIdentifier();
         return mission;
     }
     else
     {
-        Mission mission(std::string("Training quest"), level, std::map<std::string, int>(), std::vector<std::string>());
+        int reward = level * GOLD_TRAINING_MISSION_LEVEL_MUPLTIPLIER;
+        Mission mission(std::string("Training quest"), level, reward, std::map<std::string, int>());
         mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size(), terrain_types_weights)];
+        mission.createIdentifier();
         return mission;
     }
 }
@@ -531,62 +540,68 @@ Stats Game::calculateMonstersStats(Mission &mission)
 {
     Debug::dbg << "Calculating monster stats for mission\n";
     Stats monsterStats;
-    for (auto &key : mission.monsters_keys)
+    for (const auto &[key, monsterCount] : mission.monsters)
     {
         nlohmann::json &monsterData = monsters[key];
 
         monsterStats.strength += (
             monsterData.contains("strength") ? 
             monsterData["strength"].get<int>() : 0
-        ) * mission.monsters[key];
+        ) * monsterCount;
         
         monsterStats.agility += (
             monsterData.contains("agility") ? 
             monsterData["agility"].get<int>() : 0
-        ) * mission.monsters[key];
+        ) * monsterCount;
 
         monsterStats.fortitude += (
             monsterData.contains("fortitude") ? 
             monsterData["fortitude"].get<int>() : 0
-        ) * mission.monsters[key];
+        ) * monsterCount;
 
         monsterStats.willpower += (
             monsterData.contains("willpower") ? 
             monsterData["willpower"].get<int>() : 0
-        ) * mission.monsters[key];
+        ) * monsterCount;
 
         monsterStats.perception += (
             monsterData.contains("perception") ? 
             monsterData["perception"].get<int>() : 0
-        ) * mission.monsters[key];
+        ) * monsterCount;
 
         monsterStats.wisdom += (
             monsterData.contains("wisdom") ? 
             monsterData["wisdom"].get<int>() : 0
-        ) * mission.monsters[key];
+        ) * monsterCount;
 
         monsterStats.magic += (
             monsterData.contains("magic") ? 
             monsterData["magic"].get<int>() : 0
-        ) * mission.monsters[key];
+        ) * monsterCount;
         if (monsterData[key].contains("strengths"))
         {
-            monsterStats.strengths.insert(
-                monsterStats.strengths.end(),
-                monsterData["strengths"].begin(),
-                monsterData["strengths"].end()
-            );
+            for (int i = 0; i < monsterCount; i++)
+            {
+                monsterStats.strengths.insert(
+                    monsterStats.strengths.end(),
+                    monsterData["strengths"].begin(),
+                    monsterData["strengths"].end()
+                );
+            }
+            
         }
         if (monsterData[key].contains("weaknesses"))
         {
-            monsterStats.weaknesses.insert(
-                monsterStats.weaknesses.end(),
-                monsterData["weaknesses"].begin(),
-                monsterData["weaknesses"].end()
-            );
+            for (int i = 0; i < monsterCount; i++)
+            {
+                monsterStats.weaknesses.insert(
+                    monsterStats.weaknesses.end(),
+                    monsterData["weaknesses"].begin(),
+                    monsterData["weaknesses"].end()
+                );
+            }
         }
     }
-
     return monsterStats;
 }
 
@@ -597,7 +612,7 @@ Stats Game::calculateTeamStats(Mission &mission)
     Stats teamStats;
     for (auto &adv : mission.assignedAdventurers)
     {
-        std::optional<Adventurer*> advOpt = guild.getAdventurerByName(adv);
+        std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(adv);
         if (advOpt.has_value())
         {
             Adventurer *advPtr = advOpt.value();
@@ -620,25 +635,136 @@ Stats Game::calculateTeamStats(Mission &mission)
             );
         }
     }
+    teamStats.balanceStrengthsAndWeaknesses();
     return teamStats;
 }
 
 // determines if the mission is successful based on team stats, monster stats, and terrain type
-bool Game::determineSuccess(Mission &mission)
+MissionResult Game::determineSuccess(Mission &mission)
 {
     Debug::dbg << "Determining mission success\n";
     Stats monsterStats = calculateMonstersStats(mission);
     Stats teamStats = calculateTeamStats(mission);
     int points = calculatePoints(teamStats, monsterStats, mission.terrainType);
-    int probability = gameUtil::sigmoid(points, 0.1) * 100;
+    int probability = gameUtil::sigmoid(points, SUCCESS_STEEPNESS) * 100;
     Debug::dbg << "Mission success probability: " << probability << "\n";
     int roll = getDiceRoll(100);
-    Debug::dbg << "Mission roll: " << roll << "\n";
-    if (roll <= probability)
+    bool success = roll <= probability;
+    Debug::dbg << "Mission roll " << roll << ": " << (success ? "Success" : "Failure")  << "\n";
+    
+    MissionResult result;
+    result.success = success;
+    result.lostAdventurers = determineSurvival(mission, monsterStats, success);
+    result.gainedGold = (success ? mission.reward : 0) - LOST_ADVENTURER_COST * result.lostAdventurers.size();
+    return result;
+}
+
+std::vector<std::string> Game::determineSurvival(Mission &mission, Stats &monsterStats, bool success)
+{
+    Debug::dbg << "Determining survival of adventurers";
+    std::vector<std::string> lostAdv{};
+    for (auto &advIdentifier : mission.assignedAdventurers)
     {
-        return true;
+        Debug::dbg << "Determining survival of " << advIdentifier << "\n";
+        std::optional<Adventurer *>adv = guild.getAdventurerByIdentifier(advIdentifier);
+        if (adv.has_value())
+        {
+            int divisor = success ? mission.assignedAdventurers.size() * SUCCESS_ADV_TEAM_DIVISOR : FAILURE_ADV_DIVISOR;
+            Debug::dbg << "Divisor: " << divisor << "\n";
+            nlohmann::json terrainData = terrain_types[mission.terrainType];
+            int points = 0;
+            Debug::dbg << "Adventurer Stats vs Monster Stats\n";
+            points += adv.value()->stats.strength - monsterStats.strength / divisor;
+            points += adv.value()->stats.agility - monsterStats.agility / divisor;
+            points += adv.value()->stats.fortitude - monsterStats.fortitude / divisor;
+            points += adv.value()->stats.willpower - monsterStats.willpower / divisor;
+            points += adv.value()->stats.perception * (terrainData.contains("visibility") ? terrainData["visibility"].get<int>() : 1) / 100 - monsterStats.perception / divisor;
+            points += adv.value()->stats.wisdom - monsterStats.wisdom / divisor;
+            points += adv.value()->stats.magic - monsterStats.magic / divisor;
+            Debug::dbg << "Points after raw stats comparison: " << points << "\n";
+            Debug::dbg << "Calculating strengths and weaknesses interactions\n";
+            std::vector<std::string> monsterStrengths(monsterStats.strengths);
+            std::vector<std::string> monsterWeaknessses(monsterStats.weaknesses);
+            std::vector<std::string> advStrengths(adv.value()->stats.strengths);
+            std::vector<std::string> advWeaknesses(adv.value()->stats.weaknesses);
+            for (auto i = advStrengths.begin(); i != advStrengths.end(); ++i)
+            {
+                bool matched = false;
+                for (auto j = monsterWeaknessses.begin(); j != monsterWeaknessses.end();++j)
+                {
+                    if (*i == *j)
+                    {
+                        points += MATCHING_TAG_POINTS;
+                        matched = true;
+                        advStrengths.erase(i);
+                        monsterWeaknessses.erase(j);
+                        break;
+                    }
+                }
+                for (auto &tag : terrainData["tags"])
+                {
+                    if (*i == tag)
+                    {
+                        points += MATCHING_TAG_POINTS;
+                    }
+                }
+                if (!matched)
+                {
+                    points += NONMATCHING_TAG_POINTS;
+                }
+                else
+                {
+                    break;
+                }
+                
+            }
+            for (auto i = advWeaknesses.begin(); i != advWeaknesses.end(); ++i)
+            {
+                bool matched = false;
+                for (auto j = monsterStrengths.begin(); j != monsterStrengths.end();++j)
+                {
+                    if (*i == *j)
+                    {
+                        points -= MATCHING_TAG_POINTS;
+                        matched = true;
+                        advWeaknesses.erase(i);
+                        monsterStrengths.erase(j);
+                        break;
+                    }
+                }
+                for (auto &tag : terrainData["tags"])
+                {
+                    if (*i == tag)
+                    {
+                        points -= MATCHING_TAG_POINTS;
+                    }
+                }
+                if (!matched)
+                {
+                    points -= NONMATCHING_TAG_POINTS;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            Debug::dbg << "Adventurer calculated points: " << points << "\n";
+            int probability = gameUtil::sigmoid(points, SUCCESS_STEEPNESS) * 100;
+            Debug::dbg << "Adventurer survival probability: " << probability << "\n";
+            int roll = getDiceRoll(100);
+            bool success = roll <= probability;
+            Debug::dbg << "Adventurer roll " << roll << ": " << (success ? "Success" : "Failure")  << "\n";
+            if (!success)
+            {
+                lostAdv.push_back(advIdentifier);
+            }
+        }
+        else
+        {
+            Debug::dbg << "Adventurer with name " << advIdentifier << "cannot be found, skipping\n";
+        }
     }
-    return false;
+    return lostAdv;
 }
 
 // calculates the points for the mission based on team stats, monster stats, and terrain type
@@ -657,17 +783,19 @@ int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &te
     points += teamStats.magic - monsterStats.magic;
     Debug::dbg << "Points after raw stats comparison: " << points << "\n";
     Debug::dbg << "Calculating strengths and weaknesses interactions\n";
+    std::vector<std::string> monsterStrengths(monsterStats.strengths);
+    std::vector<std::string> monsterWeaknessses(monsterStats.weaknesses);
     for (auto i = teamStats.strengths.begin(); i != teamStats.strengths.end(); ++i)
     {
         bool matched = false;
-        for (auto j = monsterStats.weaknesses.begin(); j != monsterStats.weaknesses.end();++j)
+        for (auto j = monsterWeaknessses.begin(); j != monsterWeaknessses.end();++j)
         {
             if (*i == *j)
             {
                 points += 5;
                 matched = true;
                 teamStats.strengths.erase(i);
-                monsterStats.weaknesses.erase(j);
+                monsterWeaknessses.erase(j);
                 break;
             }
         }
@@ -675,30 +803,29 @@ int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &te
         {
             if (*i == tag)
             {
-                points += 5;
+                points += MATCHING_TAG_POINTS;
             }
         }
         if (!matched)
         {
-            points += 1;
+            points += NONMATCHING_TAG_POINTS;
         }
         else
         {
             break;
         }
-        
     }
     for (auto i = teamStats.weaknesses.begin(); i != teamStats.weaknesses.end(); ++i)
     {
         bool matched = false;
-        for (auto j = monsterStats.strengths.begin(); j != monsterStats.strengths.end();++j)
+        for (auto j = monsterStrengths.begin(); j != monsterStrengths.end();++j)
         {
             if (*i == *j)
             {
-                points -= 5;
+                points -= MATCHING_TAG_POINTS;
                 matched = true;
                 teamStats.weaknesses.erase(i);
-                monsterStats.strengths.erase(j);
+                monsterStrengths.erase(j);
                 break;
             }
         }
@@ -706,21 +833,51 @@ int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &te
         {
             if (*i == tag)
             {
-                points -= 5;
+                points -= MATCHING_TAG_POINTS;
             }
         }
         if (!matched)
         {
-            points -= 1;
+            points -= NONMATCHING_TAG_POINTS;
         }
         else
         {
             break;
         }
-        
     }
     Debug::dbg << "Final calculated points: " << points << "\n";
     return points;
+}
+
+void Game::finishMission(Mission &mission)
+{
+    MissionResult result = determineSuccess(mission);
+    giveDialog("IMissionResult");
+    bool lostAdv = result.lostAdventurers.size() > 0;
+    std::string lostAdvLine = "";
+    if (lostAdv)
+    {
+        for (int i = 0; i < result.lostAdventurers.size()-1; i++)
+        {
+            lostAdvLine += guild.getAdventurerByIdentifier(result.lostAdventurers[i]).value()->name + ", ";
+            guild.removeAdventurerByIdentifier(result.lostAdventurers[i]);
+        }
+        lostAdvLine += guild.getAdventurerByIdentifier(result.lostAdventurers[result.lostAdventurers.size()-1]).value()->name;
+        guild.removeAdventurerByIdentifier(result.lostAdventurers[result.lostAdventurers.size()-1]);
+    }
+    else
+    {
+        lostAdvLine = "None";
+    }
+    guild.removeMissionByIdentifier(mission);
+    guild.gold += result.gainedGold;
+
+    std::vector<std::string> card{
+        std::string("Status: " + std::string(result.success ? "Success" : "Failure")),
+        std::string("Lost adventurers: " + lostAdvLine),
+        std::string("Gold gained: " + std::to_string(result.gainedGold))
+    };
+    gameUtil::renderCards(wm, {card});
 }
 
 // renders the character cards of the given adventurers side by side
@@ -729,7 +886,7 @@ void Game::renderCharacters(std::vector<std::string> adventurers)
     std::vector<std::vector<std::string>> cardsLines;
     for (auto &adv : adventurers)
     {
-        std::optional<Adventurer*> advOpt = guild.getAdventurerByName(adv);
+        std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(adv);
         if (advOpt.has_value())
         {
             cardsLines.push_back(advOpt.value()->toCharacterCard());
@@ -754,7 +911,7 @@ void Game::renderMissions(std::vector<Mission> &missions)
     std::vector<std::vector<std::string>> cardsLines;
     for (auto &mission : missions)
     {
-        cardsLines.push_back(mission.toMissionCard());
+        cardsLines.push_back(toMissionCard(mission));
     }
     gameUtil::renderCards(wm, cardsLines);
 }
@@ -779,4 +936,82 @@ void Game::showHome()
     default:
         break;
     }
+}
+
+// this method attempts to find and assign a random modifier to the adventurer that matches the
+// specified benefit value. may fail to find a valid modifier within 10 tries, in which case no
+// modifiers will be applied.
+void Game::giveModWithBenefit(Adventurer &adv, int benefit)
+{
+    Debug::dbg << "Trying to give modifier with benefit " << benefit << " to adventurer: " << adv.name << "\n";
+    RNG &rng = RNG::get();
+    int drawn = -1;
+    for (int i = 0; i < 10;i++)
+    {
+        int rand = rng.weightedInt(0, adventurer_modifiers.size(), adventurer_modifiers_weights);
+        std::string key = adventurer_modifiers_keys[rand];
+        if (adventurer_modifiers[key]["benefit"].get<int>() == benefit)
+        {
+            continue;
+        }
+        bool contains = false;
+        for (int j = 0; j < adv.modifiers.size(); j++)
+        {
+            if (key == adv.modifiers[j])
+            {
+                contains = true;
+                break;
+            }
+        }
+        if (!contains)
+        {
+            drawn = rand;
+            break;
+        }
+    }
+
+    if (drawn != -1)
+    {
+        Debug::dbg << "Drew modifier: " << adventurer_modifiers_keys[drawn] << "\n";
+        adv.modifiers.push_back(adventurer_modifiers_keys[drawn]);
+        updateAdventurerStatus(adv);
+    }
+}
+
+std::vector<std::string> toMissionCard(Mission &mission)
+{
+    return std::vector<std::string>();
+}
+
+// Creates a mission card (text-based) for the mission
+// Output is a vector of strings, each string being a line
+std::vector<std::string> Game::toMissionCard(Mission &mission)
+{
+    Debug::dbg << "Creating mission card for mission: " << mission.description << "\n";
+    std::vector<std::string> card = {
+        std::string("Mission: " + mission.description),
+        std::string("Level: " + std::to_string(mission.level)),
+        std::string("Reward: " + std::to_string(mission.reward)),
+        std::string("Terrain: " + gameUtil::snakeToNormal(mission.terrainType, true)),
+        std::string("Assigned Adventurers: "),
+        
+    };
+    for (auto &adv : mission.assignedAdventurers)
+    {
+        std::optional<Adventurer*> advOptional = guild.getAdventurerByIdentifier(adv);
+        if (advOptional.has_value())
+        {
+            card.push_back(" " + advOptional.value()->name);
+        }
+        else
+        {
+            Debug::dbg << "Adventurer doesn't exit !\n";
+        }
+    }
+    card.push_back(std::string("Monsters:"));
+    for (const auto &[key, value] : mission.monsters)
+    {
+        card.push_back(" " + gameUtil::snakeToNormal(key, true) + " x" + std::to_string(value));
+    }
+    return card;
 }

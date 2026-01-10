@@ -15,20 +15,23 @@ public:
         level(0),
         hunger(hunger),
         stats(),
-        modifiers(std::vector<std::string>())
+        modifiers(std::vector<std::string>()),
+        occupied(false)
         {};
     Adventurer(nlohmann::json json);
     void resetStats();
     void updateLevel();
     void balanceStats();
-    void balanceStrengthsAndWeaknesses();
+    void createIdentifier();
     nlohmann::json toJson();
     std::string name;
     int level;
     int hunger;
     Stats stats;
+    std::string identifier;
     std::vector<std::string> modifiers;
     std::string gameClass;
     std::string race;
+    bool occupied;
     std::vector<std::string> toCharacterCard();
 };

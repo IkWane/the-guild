@@ -21,7 +21,7 @@ namespace gameUtil
 
     int chooseOption(WindowManager &wm, nlohmann::json options, int defaultChoice = 0, bool giveResult = false);
 
-    std::string snakeToNormal(std::string &str, bool upperFirst = false);
+    std::string snakeToNormal(const std::string &str, bool upperFirst = false);
 
     void loadJsonConfig(std::string path, nlohmann::json &data, std::vector<std::string> &keys, std::vector<int> &weights);
 

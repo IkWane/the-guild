@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <math.h>
+#include "Debug.hpp"
 
 struct Stats
 {
@@ -12,4 +14,6 @@ struct Stats
     int magic = 0;
     std::vector<std::string> strengths = std::vector<std::string>();
     std::vector<std::string> weaknesses = std::vector<std::string>();
+    int calculateLevel();
+    void balanceStrengthsAndWeaknesses();
 };

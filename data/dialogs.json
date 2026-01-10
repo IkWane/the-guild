@@ -29,7 +29,7 @@
         ]
     },
     "EfileName": {
-        "text": "Enter the name of your save file (without extension):"
+        "text": "Enter the name of your save file (without extension, put in the saves/ folder):"
     },
     "NdepositGold": {
         "text": "How much gold do you want to deposit to your guild's treasury ?"
@@ -61,5 +61,8 @@
         "choices": [
             "Exit"
         ]
+    },
+    "IMissionResult": {
+        "text": "Mission Result :"
     }
 }

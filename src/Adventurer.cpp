@@ -19,6 +19,8 @@ Adventurer::Adventurer(nlohmann::json json)
     stats.magic = json["magic"].get<int>();
     stats.weaknesses = json["weaknesses"].get<std::vector<std::string>>();
     stats.strengths = json["strengths"].get<std::vector<std::string>>();
+    occupied = json["occupied"].get<bool>();
+    identifier = json["identifier"].get<std::string>();
 }
 
 // Resets the stats (numerical as well as strengths and weaknesses)
@@ -40,17 +42,7 @@ void Adventurer::resetStats()
 void Adventurer::updateLevel()
 {
     Debug::dbg << "Updating level for adventurer: " << name << "\n";
-    int points = (
-        stats.strength + 
-        stats.agility + 
-        stats.fortitude + 
-        stats.willpower + 
-        stats.perception + 
-        stats.wisdom + 
-        stats.magic
-    ) + stats.strengths.size() - stats.weaknesses.size();
-    Debug::dbg << "Total stat points: " << points << "\n";
-    level = int(sqrt(std::max(points, 1)));
+    level = stats.calculateLevel();
 }
 
 // makes sure stats are within acceptable bounds
@@ -66,46 +58,19 @@ void Adventurer::balanceStats()
     stats.magic = std::max(0, stats.magic); // magic can be 0 -> no magic ability
 }
 
-// removes strength and weaknesses so they don't overlap
-void Adventurer::balanceStrengthsAndWeaknesses()
+void Adventurer::createIdentifier()
 {
-    Debug::dbg << "Balancing strengths and weaknesses for adventurer: " << name << "\n";
-    std::vector<std::string> balancedStrengths;
-    std::vector<std::string> balancedWeaknesses;
-    for (auto &strength : stats.strengths)
-    {
-        bool isBalanced = false;
-        for (auto &weakness : stats.weaknesses)
-        {
-            if (strength == weakness)
-            {
-                isBalanced = true;
-                break;
-            }
-        }
-        if (!isBalanced)
-        {
-            balancedStrengths.push_back(strength);
-        }
-    }
-    for (auto &weakness : stats.weaknesses)
-    {
-        bool isBalanced = false;
-        for (auto &strength : stats.strengths)
-        {
-            if (weakness == strength)
-            {
-                isBalanced = true;
-                break;
-            }
-        }
-        if (!isBalanced)
-        {
-            balancedWeaknesses.push_back(weakness);
-        }
-    }
-    stats.strengths = balancedStrengths;
-    stats.weaknesses = balancedWeaknesses;
+    identifier = (
+        name +
+        std::to_string(stats.strength) +
+        std::to_string(stats.agility) +
+        std::to_string(stats.fortitude) +
+        std::to_string(stats.perception) +
+        std::to_string(stats.willpower) +
+        std::to_string(stats.wisdom) +
+        std::to_string(stats.magic) +
+        std::to_string(level)
+    );
 }
 
 // Converts adventurer data to json format
@@ -127,7 +92,9 @@ nlohmann::json Adventurer::toJson()
         {"wisdom", stats.wisdom},
         {"magic", stats.magic},
         {"weaknesses", stats.weaknesses},
-        {"strengths", stats.strengths}
+        {"strengths", stats.strengths},
+        {"occupied", occupied},
+        {"identifier", identifier}
     };
     return nlohmann::json(obj_values);
 }
@@ -139,39 +106,24 @@ std::vector<std::string> Adventurer::toCharacterCard()
     Debug::dbg << "Creating character card for adventurer: " << name << "\n";
     //  gameUtil::fitStr("/", len-1, '-') + "\\",
     std::vector<std::string> card = {
-        std::string("| Name: " + name),
-        std::string("| Race: " + race),
-        std::string("| Class: " + gameClass),
-        std::string("| Level: " + std::to_string(level)),
-        std::string("| Stats: "),
-        std::string("|  Strength: " + std::to_string(stats.strength)),
-        std::string("|  Agility: " + std::to_string(stats.agility)),
-        std::string("|  Fortitude: " + std::to_string(stats.fortitude)),
-        std::string("|  Willpower: " + std::to_string(stats.willpower)),
-        std::string("|  Perception: " + std::to_string(stats.perception)),
-        std::string("|  Wisdom: " + std::to_string(stats.wisdom)),
-        std::string("|  Magic: " + std::to_string(stats.magic)),
-        std::string("| Modifiers: ")
+        std::string("Name: " + name),
+        std::string("Race: " + race),
+        std::string("Class: " + gameClass),
+        std::string("Level: " + std::to_string(level)),
+        std::string("Occcupied: " + std::string(occupied ? "Yes" : "No")),
+        std::string("Stats: "),
+        std::string(" Strength: " + std::to_string(stats.strength)),
+        std::string(" Agility: " + std::to_string(stats.agility)),
+        std::string(" Fortitude: " + std::to_string(stats.fortitude)),
+        std::string(" Willpower: " + std::to_string(stats.willpower)),
+        std::string(" Perception: " + std::to_string(stats.perception)),
+        std::string(" Wisdom: " + std::to_string(stats.wisdom)),
+        std::string(" Magic: " + std::to_string(stats.magic)),
+        std::string("Modifiers: ")
     };
     for (auto &mod : modifiers)
     {
-        card.push_back(std::string("|  " + gameUtil::snakeToNormal(mod, true)));
+        card.push_back(gameUtil::snakeToNormal(mod, true));
     }
-    int len = 0;
-    for (auto &line : card)
-    {
-        if (len < int(line.length()))
-        {
-            len = int(line.length());
-        }
-    }
-    len += 2; // padding
-    for (auto &line : card)
-    {
-        line = gameUtil::fitStr(line, len-1) + "|";
-    }
-    
-    card.insert(card.begin(), gameUtil::fitStr("/", len-1, '-') + "\\");
-    card.push_back(gameUtil::fitStr("\\", len-1, '-') + "/");
     return card;
 }
