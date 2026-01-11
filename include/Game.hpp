@@ -19,6 +19,7 @@ public:
     void run();
     int giveDialog(const char *dialogName, bool showHome = false, bool canQuit = true);
     int numberDialog(const char *dialogName);
+    std::vector<std::string> adventurerSelectionDialog(std::string text);
     std::string textEntryDialog(const char *dialogName);
     int getDiceRoll(int max);
     void exitGame(bool save = true);
@@ -37,8 +38,9 @@ public:
     void renderCharacters();
     void renderMissions(std::vector<Mission> &missions);
     void showHome();
-    void giveModWithBenefit(Adventurer &adv, int benefit);
+    std::string giveModWithBenefit(Adventurer &adv, int benefit);
     std::vector<std::string> toMissionCard(Mission &mission);
+    void advanceDay();
 private:
     WindowManager wm;
     nlohmann::json dialogs;

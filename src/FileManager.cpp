@@ -5,6 +5,10 @@ std::string FileManager::loadFile(const char *path)
 {
     Debug::dbg << "Loading file: " << path << "\n";
     std::ifstream file(path);
+    if (!file.is_open())
+    {
+        throw GameExit("Error loading file " + std::string(path));
+    }
     std::string lineStr;
     std::string result;
     while (std::getline(file, lineStr))
@@ -27,8 +31,13 @@ nlohmann::json FileManager::loadJson(const char *path)
 {
     std::string fileContent = loadFile(path);
     Debug::dbg << "Parsing JSON\n";
-    nlohmann::json result = nlohmann::json::parse(fileContent);
-    return result;
+    try {
+        nlohmann::json result = nlohmann::json::parse(fileContent);
+        return result;
+    }
+    catch (nlohmann::json::parse_error &e) {
+        throw GameExit("Error parsing JSON of file " + std::string(path));
+    }
 }
 
 // Loads and parses a JSON file from the given path

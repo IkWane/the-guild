@@ -269,7 +269,7 @@ void gameUtil::renderCards(WindowManager &wm, std::vector<std::vector<std::strin
                 len = int(line.length());
             }
         }
-        len += 3; // padding
+        len += CARDS_PADDING;
         for (auto &line : cardLines)
         {
             line = gameUtil::fitStr("| " + line, len) + "|";

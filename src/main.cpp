@@ -12,22 +12,11 @@ int main()
     }
     catch(const GameExit& e)
     {
-        return e.value;
+        if (!e.message.empty())
+        {
+            std::cerr << e.message;
+            return 1;
+        }
     }
-    // Debug::initDebug("logs/game_log.txt");
-    // WindowManager wm = WindowManager();
-    // wm.writeNewLine("Hello, World!");
-    // wm.waitForKeyPress();
-    // wm.writeNewLine("This is a test of the WindowManager.");
-    // wm.waitForKeyPress();
-    // int ch = 0;
-    // while (ch != DEFAULT_KEY_ESCAPE)
-    // {
-    //     ch = wm.waitForKeyPress();
-    //     wm.writeNewLine(std::to_string(ch));
-    //     wm.updateWindow();
-    // }
-    
-    // wm.waitForKeyPress();
     return 0;
 }

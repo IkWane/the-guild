@@ -13,6 +13,7 @@
         "text": "Home : Select which information you want to consult",
         "choices": [
             "Money",
+            "Food",
             "Adventurers",
             "Running Missions",
             "Cancel"
@@ -64,5 +65,20 @@
     },
     "IMissionResult": {
         "text": "Mission Result :"
+    },
+    "IGoodMorning": {
+        "text": "A beautiful new day starts !"
+    },
+    "IMerchantIsHere": {
+        "text": "The merchant has arrived ! (1 gold = 1 ration, adventurers consume 1/day)"
+    },
+    "NBuyFood": {
+        "text": "How much food packs do you want to buy ?"
+    },
+    "IFoodDelivery": {
+        "text": "Thank you for your patronnage !"
+    },
+    "ISalaries": {
+        "text": "Distributing salaries !"
     }
 }

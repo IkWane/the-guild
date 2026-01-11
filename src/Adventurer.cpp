@@ -9,7 +9,7 @@ Adventurer::Adventurer(nlohmann::json json)
     modifiers = json["modifiers"].get<std::vector<std::string>>();
     gameClass = json["class"].get<std::string>();
     race = json["race"].get<std::string>();
-    hunger = json["hunger"].get<int>();
+    satiation = json["satiation"].get<int>();
     stats.strength = json["strength"].get<int>();
     stats.agility = json["agility"].get<int>();
     stats.fortitude = json["fortitude"].get<int>();
@@ -73,6 +73,11 @@ void Adventurer::createIdentifier()
     );
 }
 
+bool Adventurer::isStarved()
+{
+    return satiation <= 0;
+}
+
 // Converts adventurer data to json format
 nlohmann::json Adventurer::toJson()
 {
@@ -83,7 +88,7 @@ nlohmann::json Adventurer::toJson()
         {"level", level},
         {"race", race},
         {"class", gameClass},
-        {"hunger", hunger},
+        {"satiation", satiation},
         {"strength", stats.strength},
         {"agility", stats.agility},
         {"fortitude", stats.fortitude},
@@ -111,6 +116,7 @@ std::vector<std::string> Adventurer::toCharacterCard()
         std::string("Class: " + gameClass),
         std::string("Level: " + std::to_string(level)),
         std::string("Occcupied: " + std::string(occupied ? "Yes" : "No")),
+        std::string("Satiation : " +  std::to_string(satiation)),
         std::string("Stats: "),
         std::string(" Strength: " + std::to_string(stats.strength)),
         std::string(" Agility: " + std::to_string(stats.agility)),
@@ -123,7 +129,7 @@ std::vector<std::string> Adventurer::toCharacterCard()
     };
     for (auto &mod : modifiers)
     {
-        card.push_back(gameUtil::snakeToNormal(mod, true));
+        card.push_back(" - " + gameUtil::snakeToNormal(mod, true));
     }
     return card;
 }

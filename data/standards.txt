@@ -16,4 +16,4 @@ magic
 dialogs:
 prefixes: Q = multi-choice question, I = information, E = text entry, N = number entry, Test = for testing purposes
 
-terrain visibility is percentage
+terrain visibility is percentage, multiplied with perception

@@ -10,10 +10,10 @@
 class Adventurer
 {
 public:
-    Adventurer(std::string name, int hunger): 
+    Adventurer(std::string name, int satiation): 
         name(name),
         level(0),
-        hunger(hunger),
+        satiation(satiation),
         stats(),
         modifiers(std::vector<std::string>()),
         occupied(false)
@@ -23,10 +23,12 @@ public:
     void updateLevel();
     void balanceStats();
     void createIdentifier();
+    bool isStarved();
+    int getSalary();
     nlohmann::json toJson();
     std::string name;
     int level;
-    int hunger;
+    int satiation;
     Stats stats;
     std::string identifier;
     std::vector<std::string> modifiers;

@@ -4,6 +4,7 @@
 class GameExit : public std::exception
 {
 public:
-    int value;
-    GameExit(int val): value(val) {}
+    std::string message;
+    GameExit(std::string message): message(message) {}
+    GameExit(): message("") {}
 };

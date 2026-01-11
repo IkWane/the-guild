@@ -7,6 +7,8 @@ TheGuild::TheGuild()
     adventurers = std::vector<Adventurer>();
     missions = std::vector<Mission>();
     phase = 0;
+    day = 0;
+    rations = 0;
 }
 
 // Initializes a new guild with starter gold and empty adventurer and mission lists
@@ -15,6 +17,8 @@ TheGuild::TheGuild(std::string name)
     this->name = name;
     gold = STARTER_GOLD;
     phase = 0;
+    day = 0;
+    rations = 0;
     adventurers = std::vector<Adventurer>();
     missions = std::vector<Mission>();
 }
@@ -26,6 +30,8 @@ TheGuild::TheGuild(const char *path)
     name = jsonGuild["name"].get<std::string>();
     gold = jsonGuild["gold"].get<int>();
     phase = jsonGuild["phase"].get<int>();
+    day = jsonGuild["day"].get<int>();
+    rations = jsonGuild["rations"].get<int>();
     for (nlohmann::json &jsonAdv : jsonGuild["adventurers"])
     {
         Adventurer adv(jsonAdv);
@@ -47,6 +53,8 @@ void TheGuild::saveGuild(const char *path)
     jsonGuild["name"] = name;
     jsonGuild["gold"] = gold;
     jsonGuild["phase"] = phase;
+    jsonGuild["day"] = day;
+    jsonGuild["rations"] = rations;
     jsonGuild["adventurers"] = nlohmann::json::array();
     for (Adventurer &adv : adventurers)
     {
@@ -64,11 +72,16 @@ void TheGuild::saveGuild(const char *path)
     file.close();
 }
 
+bool TheGuild::hasLost()
+{
+    return false;
+}
+
 // Returns an adventurer pointer if found, else returns empty optional.
 // (Note: returning pointer to element in vector, so be careful with vector modifications)
 std::optional<Adventurer*> TheGuild::getAdventurerByIdentifier(std::string &identifier)
 {
-    Debug::dbg << "Searching for adventurer by name: '" << name << "'...";
+    Debug::dbg << "Searching for adventurer by identifier: '" << identifier << "'...";
     for (auto &el : adventurers)
     {
         if (el.identifier == identifier)
@@ -83,7 +96,7 @@ std::optional<Adventurer*> TheGuild::getAdventurerByIdentifier(std::string &iden
 
 void TheGuild::removeAdventurerByIdentifier(std::string &identifier)
 {
-    Debug::dbg << "trying to remove adventurer by name: '" << name << "'...";
+    Debug::dbg << "trying to remove adventurer by identifier: '" << identifier << "'...";
     for (int i = 0; i < adventurers.size(); i++)
     {
         if (adventurers[i].identifier == identifier)
@@ -139,4 +152,20 @@ void TheGuild::addMission(Mission mission)
         }
     }
     
+}
+
+// Returns a vector of pointers to unoccupied adventurers in the guild
+// Note : modifying the adventurers vector causes these pointers to become erroneous
+std::vector<Adventurer*> TheGuild::getUnoccupiedAdventurers()
+{
+    std::vector<Adventurer*> unoccupied_adventurers = std::vector<Adventurer *>();
+    for (auto &adv : adventurers)
+    {
+        if (!adv.occupied)
+        {
+            unoccupied_adventurers.push_back(&adv);
+        }
+    }
+    
+    return unoccupied_adventurers;
 }
