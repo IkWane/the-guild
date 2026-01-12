@@ -7,7 +7,7 @@
         "willpower":4,
         "perception":4,
         "wisdom":3,
-        "magic":2,
+        "magic":3,
         "strengths": [
             "pierce",
             "blunt",
@@ -17,6 +17,56 @@
             "fire",
             "cold",
             "disease"
+        ]
+    },
+    "Elf": {
+        "weight":50,
+        "strength":3,
+        "agility":5,
+        "fortitude":3,
+        "willpower":5,
+        "perception":10,
+        "wisdom":8,
+        "magic":8,
+        "strengths": [
+            "pierce",
+            "blunt",
+            "ranged",
+            "plant",
+            "forest",
+            "poison"
+        ],
+        "weaknesses": [
+            "fire",
+            "cold",
+            "disease",
+            "hot",
+            "dry"
+        ]
+    },
+    "Dwarf": {
+        "weight":50,
+        "strength":8,
+        "agility":3,
+        "fortitude":10,
+        "willpower":5,
+        "perception":6,
+        "wisdom":5,
+        "magic":5,
+        "strengths": [
+            "pierce",
+            "pierce",
+            "blunt",
+            "blunt",
+            "fire",
+            "stone",
+            "metal"
+        ],
+        "weaknesses": [
+            "cold",
+            "cold",
+            "sky",
+            "sun"
         ]
     }
 }

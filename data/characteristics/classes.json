@@ -5,14 +5,35 @@
         "perception":17,
         "fortitude":50,
         "agility":5,
-        "wisdom":6
+        "wisdom":6,
+        "willpower":20
     },
     "Swordsman": {
         "weight":100,
         "strength":20,
         "perception":25,
         "fortitude":50,
+        "agility":10,
+        "wisdom":6,
+        "willpower":10
+    },
+    "Mage": {
+        "weight":75,
+        "strength":10,
+        "perception":35,
+        "fortitude":5,
         "agility":5,
-        "wisdom":6
+        "wisdom":15,
+        "magic":35,
+        "willpower": 15
+    },
+    "Archer": {
+        "weight":100,
+        "strength":10,
+        "perception":40,
+        "fortitude":25,
+        "agility":20,
+        "wisdom":15,
+        "willpower":10
     }
 }

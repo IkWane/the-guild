@@ -1,5 +1,10 @@
 #include <ncurses.h>
 #include "Game.hpp"
+#include <algorithm>
+
+struct TestStruct {
+    int i;
+};
 
 int main()
 {

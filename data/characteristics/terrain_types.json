@@ -5,7 +5,7 @@
         "tags": []
     },
     "swamp": {
-        "weight":100,
+        "weight":75,
         "visibility": 25,
         "tags": [
             "mud",
@@ -14,6 +14,41 @@
             "plant",
             "insect",
             "disease"
+        ]
+    },
+    "forest": {
+        "weight":100,
+        "visibility": 75,
+        "tags": [
+            "plant",
+            "plant",
+            "plant",
+            "sun"
+        ]
+    },
+    "desert": {
+        "weight":75,
+        "visibility": 50,
+        "tags": [
+            "sun",
+            "sun",
+            "sun",
+            "hot",
+            "hot",
+            "dry",
+            "dry"
+        ]
+    },
+    "mountain": {
+        "weight": 50,
+        "visibility": 85,
+        "tags": [
+            "sun",
+            "dry",
+            "cold",
+            "stone",
+            "stone",
+            "stone"
         ]
     }
 }

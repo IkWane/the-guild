@@ -208,5 +208,14 @@
             "blunt",
             "pierce"
         ]
+    },
+    "hard-skined": {
+        "benefit":1,
+        "weight": 40,
+        "fortitude": 15,
+        "agility": -3,
+        "strengths": [
+            "blunt"
+        ]
     }
 }

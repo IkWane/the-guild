@@ -4,6 +4,7 @@ TheGuild::TheGuild()
 {
     this->name = "New Guild";
     gold = STARTER_GOLD;
+    level = STARTER_LEVEL;
     adventurers = std::vector<Adventurer>();
     missions = std::vector<Mission>();
     phase = 0;
@@ -16,6 +17,7 @@ TheGuild::TheGuild(std::string name)
 {
     this->name = name;
     gold = STARTER_GOLD;
+    level = STARTER_LEVEL;
     phase = 0;
     day = 0;
     rations = 0;
@@ -32,6 +34,7 @@ TheGuild::TheGuild(const char *path)
     phase = jsonGuild["phase"].get<int>();
     day = jsonGuild["day"].get<int>();
     rations = jsonGuild["rations"].get<int>();
+    level = jsonGuild["level"].get<int>();
     for (nlohmann::json &jsonAdv : jsonGuild["adventurers"])
     {
         Adventurer adv(jsonAdv);
@@ -55,6 +58,7 @@ void TheGuild::saveGuild(const char *path)
     jsonGuild["phase"] = phase;
     jsonGuild["day"] = day;
     jsonGuild["rations"] = rations;
+    jsonGuild["level"] = level;
     jsonGuild["adventurers"] = nlohmann::json::array();
     for (Adventurer &adv : adventurers)
     {
@@ -74,7 +78,7 @@ void TheGuild::saveGuild(const char *path)
 
 bool TheGuild::hasLost()
 {
-    return false;
+    return gold < -100;
 }
 
 // Returns an adventurer pointer if found, else returns empty optional.
@@ -138,20 +142,10 @@ std::vector<std::string> TheGuild::adventurerIdentifiers()
     return names;
 }
 
-void TheGuild::addMission(Mission mission)
+void TheGuild::addMission(Mission &mission)
 {
     Debug::dbg << "Adding mission to guild\n";
     missions.push_back(mission);
-    for (auto &advName : mission.assignedAdventurers)
-    {
-        std::optional<Adventurer*> advOptional = getAdventurerByIdentifier(advName);
-        if (advOptional.has_value())
-        {
-            advOptional.value()->occupied = true;
-            Debug::dbg << advName << "is now occupied\n";
-        }
-    }
-    
 }
 
 // Returns a vector of pointers to unoccupied adventurers in the guild

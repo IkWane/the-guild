@@ -29,6 +29,7 @@ public:
     std::string name;
     int level;
     int satiation;
+    int salary;
     Stats stats;
     std::string identifier;
     std::vector<std::string> modifiers;

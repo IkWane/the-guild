@@ -1,19 +1,10 @@
 {
-    "_comment": "This is a JSON file containing the dialogs. prefixes: Q = multi-choice question, I = information, E = text entry, N = number entry, Test = for testing purposes",
-    "Test": {
-        "text" : "How many chickens ?",
-        "choices": [
-            "You chose death !",
-            "I don't know.",
-            "Prout",
-            "Family."
-        ]
-    },
     "QHome": {
         "text": "Home : Select which information you want to consult",
         "choices": [
             "Money",
             "Food",
+            "Day",
             "Adventurers",
             "Running Missions",
             "Cancel"
@@ -41,14 +32,6 @@
     "IfileLoadError": {
         "text": "Error loading save file. Starting a new game."
     },
-    "QRandomStuff":{
-        "text": "Blah Blah adventurer woo show me what you got bitch",
-        "choices":[
-            "This",
-            "Is",
-            "Placeholder"
-        ]
-    },
     "QquitGame": {
         "text": "Do you wish to quit the game ?",
         "choices": [
@@ -57,28 +40,75 @@
             "Cancel"
         ]
     },
-    "QendDemo": {
-        "text": "You have reached the end of this demo. Thank you for playing !",
-        "choices": [
-            "Exit"
-        ]
-    },
     "IMissionResult": {
         "text": "Mission Result :"
     },
     "IGoodMorning": {
-        "text": "A beautiful new day starts !"
+        "text": "Rise and shine everyone, a beautiful new day is upon us !",
+        "choices":[
+            "Continue"
+        ]
     },
     "IMerchantIsHere": {
-        "text": "The merchant has arrived ! (1 gold = 1 ration, adventurers consume 1/day)"
+        "text": "The merchant has arrived ! (1 gold = 1 ration)"
     },
     "NBuyFood": {
-        "text": "How much food packs do you want to buy ?"
+        "text": "How many rations do you want to buy ?",
+        "min": 0
     },
     "IFoodDelivery": {
         "text": "Thank you for your patronnage !"
     },
     "ISalaries": {
-        "text": "Distributing salaries !"
+        "text": "Time to distribute salaries !",
+        "choices":[
+            "Continue"
+        ]
+    },
+    "ISelectAdventurers": {
+        "text": "Select adventurers"
+    },
+    "ISelectMission": {
+        "text": "What mission should your (alive for now) adventurers take on ?"
+    },
+    "INewArrivals": {
+        "text": "New adventurers have arrived !"
+    },
+    "INothingToDo": {
+        "text": "Nevermind, Nothing to do here."
+    },
+    "INoUnoccupiedAdventurers": {
+        "text": "Your adventurers are all occupied ! Moving on."
+    },
+    "IMidday": {
+        "text": "As midday comes, you eagerly wait for the arrival of new potential recruits !",
+        "choices":[
+            "Continue"
+        ]
+    },
+    "IEvening": {
+        "text": "As the sun sets, you tensly await your dear adventurers' return...",
+        "choices":[
+            "Continue"
+        ]
+    },
+    "ISurvived": {
+        "text": "Congratulations, your guild managed to survive another day !"
+    },
+    "INewMissions": {
+        "text": "New daily missions are available !"
+    },
+    "ILost": {
+        "text": "Your Guild has fallen, forever lost. Your dear adventurers are dead and remembered by no one. What a shame man.",
+        "choice": [
+            "Suicide",
+            "Give up"
+        ]
+    },
+    "INoMoreMissions": {
+        "text": "There are no more daily missions remaining."
+    },
+    "IDebt": {
+        "text": "The guild is currently endebted !"
     }
 }

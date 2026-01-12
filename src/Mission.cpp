@@ -35,6 +35,7 @@ void Mission::assignAdventurer(Adventurer &adv)
 {
     if (!isFull())
     {
+        Debug::dbg << "Assigned adventurer " << adv.name << " to mission\n"; 
         assignedAdventurers.push_back(adv.identifier);
         adv.occupied = true;
     }
@@ -68,10 +69,7 @@ void Mission::createIdentifier()
     );
     for (const auto &[key, value] : monsters)
     {
-        for (int i = 0; i < value; i++)
-        {
-            newIdentifier += key;
-        }
+        newIdentifier += key + std::to_string(value);
     }
     identifier = newIdentifier;
 }

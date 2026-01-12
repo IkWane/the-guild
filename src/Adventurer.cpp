@@ -9,6 +9,7 @@ Adventurer::Adventurer(nlohmann::json json)
     modifiers = json["modifiers"].get<std::vector<std::string>>();
     gameClass = json["class"].get<std::string>();
     race = json["race"].get<std::string>();
+
     satiation = json["satiation"].get<int>();
     stats.strength = json["strength"].get<int>();
     stats.agility = json["agility"].get<int>();
@@ -17,23 +18,33 @@ Adventurer::Adventurer(nlohmann::json json)
     stats.perception = json["perception"].get<int>();
     stats.wisdom = json["wisdom"].get<int>();
     stats.magic = json["magic"].get<int>();
+
+    stats.add_strength = json["add_strength"].get<int>();
+    stats.add_agility = json["add_agility"].get<int>();
+    stats.add_fortitude = json["add_fortitude"].get<int>();
+    stats.add_willpower = json["add_willpower"].get<int>();
+    stats.add_perception = json["add_perception"].get<int>();
+    stats.add_wisdom = json["add_wisdom"].get<int>();
+    stats.add_magic = json["add_magic"].get<int>();
+
     stats.weaknesses = json["weaknesses"].get<std::vector<std::string>>();
     stats.strengths = json["strengths"].get<std::vector<std::string>>();
     occupied = json["occupied"].get<bool>();
     identifier = json["identifier"].get<std::string>();
+    salary = json["salary"].get<int>();
 }
 
 // Resets the stats (numerical as well as strengths and weaknesses)
 void Adventurer::resetStats()
 {
     Debug::dbg << "Resetting stats for adventurer: " << name << "\n";
-    stats.strength = 0;
-    stats.agility = 0;
-    stats.fortitude = 0;
-    stats.willpower = 0;
-    stats.perception = 0;
-    stats.wisdom = 0;
-    stats.magic = 0;
+    stats.strength = stats.add_strength;
+    stats.agility = stats.add_agility;
+    stats.fortitude = stats.add_fortitude;
+    stats.willpower = stats.add_willpower;
+    stats.perception = stats.add_willpower;
+    stats.wisdom = stats.add_wisdom;
+    stats.magic = stats.add_magic;
     stats.strengths = std::vector<std::string>();
     stats.weaknesses = std::vector<std::string>();
 }
@@ -78,6 +89,11 @@ bool Adventurer::isStarved()
     return satiation <= 0;
 }
 
+int Adventurer::getSalary()
+{
+    return salary;
+}
+
 // Converts adventurer data to json format
 nlohmann::json Adventurer::toJson()
 {
@@ -99,7 +115,8 @@ nlohmann::json Adventurer::toJson()
         {"weaknesses", stats.weaknesses},
         {"strengths", stats.strengths},
         {"occupied", occupied},
-        {"identifier", identifier}
+        {"identifier", identifier},
+        {"salary", salary}
     };
     return nlohmann::json(obj_values);
 }
@@ -116,7 +133,8 @@ std::vector<std::string> Adventurer::toCharacterCard()
         std::string("Class: " + gameClass),
         std::string("Level: " + std::to_string(level)),
         std::string("Occcupied: " + std::string(occupied ? "Yes" : "No")),
-        std::string("Satiation : " +  std::to_string(satiation)),
+        std::string("Satiation: " +  std::to_string(satiation)),
+        std::string("Salary: " + std::to_string(salary)),
         std::string("Stats: "),
         std::string(" Strength: " + std::to_string(stats.strength)),
         std::string(" Agility: " + std::to_string(stats.agility)),
@@ -125,7 +143,7 @@ std::vector<std::string> Adventurer::toCharacterCard()
         std::string(" Perception: " + std::to_string(stats.perception)),
         std::string(" Wisdom: " + std::to_string(stats.wisdom)),
         std::string(" Magic: " + std::to_string(stats.magic)),
-        std::string("Modifiers: ")
+        std::string("Traits: ")
     };
     for (auto &mod : modifiers)
     {

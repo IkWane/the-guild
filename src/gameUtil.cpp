@@ -23,7 +23,7 @@ std::string gameUtil::readStr(WindowManager &wm)
     wm.updateWindow();
     int key = wm.waitForKeyPress();
 
-    while (key != '\n')
+    while (key != DEFAULT_KEY_ENTER)
     {
         if (key == DEFAULT_KEY_BACKSPACE)
         {
@@ -70,7 +70,9 @@ std::string gameUtil::readStr(WindowManager &wm)
         wm.updateWindow();
         key = wm.waitForKeyPress();
     }
-    
+
+    wm.writePos(wm.getLastLine(), "> '" + input + "'"); 
+
     return input;
 }
 
@@ -91,11 +93,11 @@ int gameUtil::chooseOption(WindowManager &wm, int optionsLen, std::string option
             {
                 if (selected == i)
                 {
-                    text += " > " + options[i] + " < ";
+                    text += " > " + options[i] + " <";
                 }
                 else
                 {
-                    text += "   " + options[i] + "   ";
+                    text += "   " + options[i] + "  ";
                 }
             }
             wm.writePos(line, text);
@@ -140,10 +142,11 @@ int gameUtil::chooseOption(WindowManager &wm, int optionsLen, std::string option
                 break;
             }
         }
-        else if (key == DEFAULT_KEY_ENTER)
+        else if (key == DEFAULT_KEY_ENTER || key == DEFAULT_KEY_SPACE)
         {
             break;
         }
+        Debug::dbg << std::to_string(key) << "\n";
     }
     if (giveResult && selected != -1)
     {

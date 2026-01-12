@@ -7,6 +7,7 @@ WindowManager::WindowManager()
     text = std::vector<std::string>();
     Debug::dbg << "Getting window size\n";
     getmaxyx(window, max_y, max_x);
+    max_x -= 2;
     current_line = 0;
     Debug::dbg << "Configuring ncurses\n";
     cbreak();
@@ -16,13 +17,18 @@ WindowManager::WindowManager()
 }
 void WindowManager::writeNewLine(std::string _text)
 {
-    // Debug::dbg << "Writing new line to window manager: " << _text << "\n";
-    text.push_back(_text);
+    #ifdef WINDOW_RENDER_DEBUG
+    Debug::dbg << "Writing new line to window manager: " << _text << "\n";
+    #endif
+    text.push_back("  " + _text);
     current_line = text.size() - 1;
 }
 void WindowManager::writePos(int y, std::string _text)
 {
-    text[y] = _text;
+    #ifdef WINDOW_RENDER_DEBUG
+    Debug::dbg << "Replacing line " << y << " with : " << _text << "\n";
+    #endif
+    text[y] = "  " + _text;
     current_line = y;
 }
 
@@ -33,7 +39,9 @@ void WindowManager::removeLastLine()
 
 void WindowManager::updateWindow()
 {
-    // Debug::dbg << "Updating window display\n";
+    #ifdef WINDOW_RENDER_DEBUG
+    Debug::dbg << "Updating window display\n";
+    #endif
     clearWindow();
     int max = std::min(getLastLine(), max_y-1);
     if (current_line < max)
@@ -54,7 +62,9 @@ void WindowManager::updateWindow()
         printw("%s\n", text[i].c_str());
     }
     refresh();
-    // Debug::dbg << "Window update complete\n";
+    #ifdef WINDOW_RENDER_DEBUG
+    Debug::dbg << "Window update complete\n";
+    #endif
 }
 int WindowManager::getLastLine()
 {
@@ -70,7 +80,9 @@ int WindowManager::getMaxY()
 }
 void WindowManager::clearWindow()
 {
-    // Debug::dbg << "Clearing window contents\n";
+    #ifdef WINDOW_RENDER_DEBUG
+    Debug::dbg << "Clearing window contents\n";
+    #endif
     erase();
     move(0,0);
 }

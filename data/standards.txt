@@ -2,6 +2,7 @@ This is a text file showing the different json formats used in this project
 
 characteristics :
 weigth is low == less likely (weighted random)
+monsters also have level representing their threat
 tags are snake_case
 modifiers can be beneficial (1), neutral (0), or harmful (-1)
 stats are signed integers :

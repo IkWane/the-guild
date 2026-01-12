@@ -40,11 +40,25 @@ Game::Game()
         config["monsters_file"].get<std::string>(), 
         monsters, 
         monsters_keys, 
-        monsters_levels
+        monsters_weights
     );
 
     Debug::dbg << "Starting new or loading existing game\n";
+    wm.writeNewLine();
+    wm.writeNewLine();
     giveDialog("Iintro");
+
+    // controls + message
+    wm.writeNewLine("Important infos : ");
+    wm.writeNewLine(" - Scroll/Up/Down = move the game's text output");
+    wm.writeNewLine(" - Escape = leave the game");
+    wm.writeNewLine(" - Left/Right = change selected option");
+    wm.writeNewLine(" - Enter = select current option");
+    wm.writeNewLine(" - Most dialogs allow you to select a 'Home' option, go check it out !");
+    wm.writeNewLine(" - Adventurers consume 1 ration per day");
+    wm.writeNewLine();
+    wm.writeNewLine(" - Enjoy !");
+    wm.writeNewLine();
 
     bool newGame = false;
 
@@ -115,11 +129,8 @@ void Game::run()
     
     // Mission mission = newRandomMission(10);
     // std::vector<std::string> advIdentifiers = guild.adventurerIdentifiers();
-    // mission.assignedAdventurers.insert(
-    //     mission.assignedAdventurers.end(), 
-    //     advIdentifiers.begin(), 
-    //     advIdentifiers.end()
-    // );
+
+    // mission.assignedAdventurers = adventurerSelectionDialog();
 
     // guild.addMission(mission);
 
@@ -133,69 +144,132 @@ void Game::run()
 
     while (!guild.hasLost())
     {
+        Debug::dbg << "Starting phase " << std::to_string(guild.phase) << "\n";
         switch (guild.phase)
         {
         // phase food delivery
         case 0:
+        {
+            Debug::dbg << "Starting new day\n";
             giveDialog("IGoodMorning");
-            wm.writeNewLine("Day " + std::to_string(guild.day));
-            advanceDay();
+            wm.writeNewLine("Day " + std::to_string(guild.day) + " : ");
+            wm.writeNewLine(gameUtil::fitStr("", 20, '-'));
+            wm.writeNewLine();
 
             giveDialog("IMerchantIsHere");
-            int foodAmount = giveDialog("NBuyFood", true);
+            int foodAmount = numberDialog("NBuyFood", true);
             giveDialog("IFoodDelivery");
             
             // applying changes all at once
             guild.rations += foodAmount;
             guild.gold -= foodAmount;
-            guild.phase = 1;
+            guild.phase++;
             break;
-        // phase mission affectation
+        }
+        // phase salary distribution
         case 1:
         {
             giveDialog("ISalaries");
-            // salary distribution (first come first serve)
-            TheGuild *guildPtr = &guild;
-             WindowManager *wmPtr = &wm;
-            guild.adventurers.erase(
-                std::remove_if(
-                    guild.adventurers.begin(), 
-                    guild.adventurers.end(), 
-                    [guildPtr, wmPtr](int i) {
-                        Adventurer& adv = guildPtr->adventurers[i];
-                        int salary = adv.getSalary();
-                        if (salary > guildPtr->gold)
-                        {
-                            wmPtr->writeNewLine("Adventurer " + adv.name + "quit, he/she/whatever couldn't be paid !");
-                            return true;
-                        }
-                        return false;
+            Debug::dbg << "Distributing salaries\n";
+            if (guild.adventurers.size() > 0)
+            {
+                for (auto &adv : guild.adventurers)
+                {
+                    int salary = adv.getSalary();
+                    if (salary > guild.gold)
+                    {
+                        wm.writeNewLine(adv.name + " cannot be paid in full !");
+                        wm.writeNewLine("-" + std::to_string(std::max(0, guild.gold)) + " Gold to " + adv.name);
+                        guild.gold = std::min(guild.gold, 0);
                     }
-                )
-            );
-            guild.phase = 2;
+                    else
+                    {
+                        wm.writeNewLine("-" + std::to_string(salary) + " Gold to " + adv.name);
+                        guild.gold -= salary;
+                    }
+                }
+                wm.writeNewLine();
+            }
+            else
+            {
+                giveDialog("INothingToDo");
+            }
+            guild.phase++;
             break;
         }
-        //phase mission attribution
-        case 2: 
-            
-            guild.phase = 3;
+        // phase adventurer arrival
+        case 2:
+        {
+            giveDialog("IMidday");
+            giveDialog("INewArrivals");
+            std::vector<Adventurer> new_adventurers{};
+            for (int i = 0; i < DAILY_ADVENTURER_COUNT; i++)
+            {
+                new_adventurers.push_back(newRandomAdventurer());
+            }
+            renderAdventurers(new_adventurers);
+            std::vector<std::string> accepted_adventurers = adventurerSelectionDialog(new_adventurers);
+            for (auto &advIdentifier : accepted_adventurers)
+            {
+                for (auto &adv : new_adventurers)
+                {
+                    if (advIdentifier == adv.identifier)
+                    {
+                        guild.adventurers.push_back(adv);
+                    }
+                }
+            }
+            guild.phase++;
             break;
+        }
+        //phase mission attribution and results
         case 3:
-
+        {
+            Debug::dbg << "Generating new daily missions\n";
+            giveDialog("INewMissions");
+            if (guild.adventurers.size() > 0)
+            {
+                std::vector<Mission> daily_missions{};
+                daily_missions.push_back(newRandomMission(guild.level));
+                for (int i = 1; i < DAILY_MISSIONS_COUNT; i++)
+                {
+                    daily_missions.push_back(newRandomMission(guild.level + getDiceRoll(MISSION_MAX_ADD_LEVEL)));
+                }
+                Debug::dbg << "Showing new daily missions\n";
+                missionSelectionDialog(daily_missions);
+            }
+            else
+            {
+                giveDialog("INothingToDo");
+            }
+            
+            guild.phase++;
+            break;
+        }
+        case 4:
+            giveDialog("IEvening");
+            advanceDay();
+            giveDialog("ISurvived");
+            guild.gold -= 10;
+            wm.writeNewLine("-10 Gold for rent.");
+            wm.writeNewLine();
+            if (guild.gold < 0)
+            {
+                giveDialog("IDebt");
+            }
+            
             guild.phase = 0;
             break;
         default:
             break;
         }
     }
-    
-
-    exitGame(true);
+    giveDialog("ILost");
+    exitGame(false);
 }
 
 // sends a dialog to the player based on the data found at dialogName in the data/dialogs.json file
-int Game::giveDialog(const char *dialogName, bool showHome, bool canQuit)
+int Game::giveDialog(const char *dialogName, bool _showHome, bool canQuit)
 {
     Debug::dbg << "Giving dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
@@ -213,7 +287,7 @@ int Game::giveDialog(const char *dialogName, bool showHome, bool canQuit)
         {
             options.push_back(dialog["choices"][i].get<std::string>());
         }
-        if (showHome)
+        if (_showHome)
         {
             options.push_back("Home");
         }
@@ -249,8 +323,9 @@ int Game::giveDialog(const char *dialogName, bool showHome, bool canQuit)
                 }
                 
             }
-            else if (option == options.size()-1 && showHome)
+            else if (option == options.size()-1 && _showHome)
             {
+                wm.writeNewLine("> Home");
                 this->showHome();
                 wm.writeNewLine(dialog["text"].get<std::string>());
                 wm.writeNewLine();
@@ -258,12 +333,16 @@ int Game::giveDialog(const char *dialogName, bool showHome, bool canQuit)
             }
         }
         Debug::dbg << "Player selected option " << option << " : " << dialog["choices"][option] << "\n";
+        wm.writeNewLine();
+        wm.updateWindow();
         return option;
-    }     
+    }
+    wm.writeNewLine();
+    wm.updateWindow();
     return -1;
 }
 
-int Game::numberDialog(const char *dialogName)
+int Game::numberDialog(const char *dialogName, bool _showHome)
 {
     Debug::dbg << "Giving number dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
@@ -278,7 +357,7 @@ int Game::numberDialog(const char *dialogName)
     }
     else
     {
-        min = -2147483648;
+        min = std::numeric_limits<int>::min();
     }
     if (dialog.contains("max"))
     {
@@ -286,16 +365,37 @@ int Game::numberDialog(const char *dialogName)
     }
     else
     {
-        max = 2147483647;
+        max = std::numeric_limits<int>::max();
+    }
+    int len = _showHome ? 8 : 7;
+    std::string list[len];
+    if (_showHome)
+    {
+        list[0] = "<<<";
+        list[1] = "<<";
+        list[2] = "<";
+        list[4] = ">";
+        list[5] = ">>";
+        list[6] = ">>>";
+        list[7] = "Home";
+    }
+    else
+    {
+        list[0] = "<<<";
+        list[1] = "<<";
+        list[2] = "<";
+        list[4] = ">";
+        list[5] = ">>";
+        list[6] = ">>>";
     }
     
-    std::string list[] = {"<<<", "<<", "<", "", ">", ">>", ">>>"};
     int selected = 0;
     int number = 0;
     while (selected != 3)
     {
         list[3] = std::to_string(number);
-        selected = gameUtil::chooseOption(wm, 7, list, selected);
+        wm.writeNewLine();
+        selected = gameUtil::chooseOption(wm, len, list, selected);
         switch (selected)
         {
         case -1:
@@ -339,62 +439,19 @@ int Game::numberDialog(const char *dialogName)
         case 6:
             number += 100;
             break;
-        
+        case 7:
+            wm.writeNewLine("> Home");
+            this->showHome();
+            wm.writeNewLine(dialog["text"].get<std::string>());
         default:
             break;
         }
     }
     number = std::clamp(number, min, max);
     wm.writeNewLine("> " + std::to_string(number));
+    wm.writeNewLine();
+    wm.updateWindow();
     return number;
-}
-
-std::vector<std::string> Game::adventurerSelectionDialog()
-{
-    Debug::dbg << "Giving adventurer selection dialog\n";
-    wm.writeNewLine(dialogs["ISelectAdventurers"]);
-    int pos = 0;
-    int selected = -1;
-    std::vector<Adventurer*> unoccupied_adv = guild.getUnoccupiedAdventurers();
-    bool selected_adventurers[unoccupied_adv.size()];
-    int showing_len = std::min(static_cast<int>(unoccupied_adv.size()), MAX_OPTIONS_ADV_SELECTION);
-    std::string options[showing_len + 3];
-    while (selected != 0)
-    {
-        options[0] = "Done";
-        options[1] = "<<";
-        for (int i = 0; i < showing_len; i++)
-        {
-            options[i + 2] = unoccupied_adv[pos + i]->name;
-        }
-        options[showing_len + 2] = ">>";
-        int choice = gameUtil::chooseOption(wm, showing_len + 3, 0);
-        if (choice == 0)
-        {
-            continue;
-        }
-        else if (choice == 1)
-        {
-            if (pos + MAX_OPTIONS_ADV_SELECTION < showing_len)
-            {
-                pos++;
-            }
-        } 
-        else if (choice = showing_len + 2)
-        {
-            if (pos > 0)
-            {
-                pos++;
-            }
-        } 
-        else
-        {
-            
-        }
-        
-    }
-    delete options;
-    delete selected_adventurers;
 }
 
 std::string Game::textEntryDialog(const char *dialogName)
@@ -425,7 +482,191 @@ std::string Game::textEntryDialog(const char *dialogName)
             input = gameUtil::readStr(wm);
         }
     }
+    wm.writeNewLine();
+    wm.updateWindow();
     return input;
+}
+
+std::vector<std::string> Game::adventurerPtrSelectionDialog(std::vector<Adventurer*> &adventurers, int max)
+{
+    Debug::dbg << "Giving adventurer selection dialog\n";
+    if (max != -1)
+    {
+        wm.writeNewLine(dialogs["ISelectAdventurers"]["text"].get<std::string>() + " (max " + std::to_string(max) + ")");
+    }
+    else
+    {
+        wm.writeNewLine(dialogs["ISelectAdventurers"]["text"].get<std::string>());
+    }
+    
+    wm.updateWindow();
+
+    int pos = 0;
+    int selected = 1;
+
+    bool selected_adventurers[adventurers.size()];
+
+    std::fill_n(selected_adventurers, adventurers.size(), false);
+    int amount_selected = 0;
+    int showing_len = std::min(static_cast<int>(adventurers.size()), MAX_OPTIONS_ADV_SELECTION);
+
+    int options_len = showing_len + 4;
+    std::string options[options_len];
+    options[0] = "Done";
+    options[1] = "<-";
+    options[showing_len + 2] = "->";
+    options[showing_len + 3] = "Home";
+
+    while (selected != 0)
+    {
+        for (int i = 0; i < showing_len; i++)
+        {
+            options[i + 2] = (selected_adventurers[pos + i] ? "[*] " : "[ ] ") + adventurers[pos + i]->name;
+        }
+        wm.writeNewLine();
+        selected = gameUtil::chooseOption(wm, options_len, options, selected);
+        if (selected == 0)
+        {
+            continue;
+        }
+        else if (selected == 1)
+        {
+            if (pos + MAX_OPTIONS_ADV_SELECTION < showing_len)
+            {
+                pos++;
+            }
+        } 
+        else if (selected == showing_len + 2)
+        {
+            if (pos > 0)
+            {
+                pos++;
+            }
+        }
+        else if (selected == showing_len + 3)
+        {
+            wm.writeNewLine("> Home");
+            showHome();
+            wm.writeNewLine(dialogs["ISelectAdventurers"]["text"].get<std::string>());
+            selected = 1;
+        }
+        
+        else
+        {
+            int index = pos + selected - 2;
+            if (selected_adventurers[index])
+            {
+                selected_adventurers[index] = false;
+                amount_selected--;
+            }
+            else if (amount_selected < max || max == -1)
+            {
+                selected_adventurers[index] = true;
+                amount_selected++;
+            }
+        }
+    }
+    std::vector<std::string> selected_indentifiers{};
+    for (int i = 0; i < adventurers.size(); i++)
+    {
+        if (selected_adventurers[i])
+        {
+            selected_indentifiers.push_back(adventurers[i]->identifier);
+        }
+    }
+    wm.writeNewLine("> Done");
+    return selected_indentifiers;
+}
+
+std::vector<std::string> Game::adventurerSelectionDialog(std::vector<Adventurer> &adventurers, int max)
+{
+    std::vector<Adventurer*> adventurerPtrs{};
+    for (auto &adv : adventurers)
+    {
+        adventurerPtrs.push_back(&adv);
+    }
+    return adventurerPtrSelectionDialog(adventurerPtrs, max);
+}
+
+//shows available mission, allows to select missions and select which adventurers to send
+void Game::missionSelectionDialog(std::vector<Mission> &missions)
+{
+    Debug::dbg << "Giving mission selection dialog\n";
+
+    std::vector<std::vector<std::string>> cardsLines;
+    int index = 0;
+    for (int i = 0; i < missions.size(); i++)
+    {
+        std::vector<std::string> card = toMissionCard(missions[i]);
+        card.insert(card.begin(), std::to_string(i) + ".");
+        cardsLines.push_back(card);
+    }
+    gameUtil::renderCards(wm, cardsLines);
+    wm.writeNewLine();
+
+    int selected = -1;
+    while (selected != 0)
+    {
+        std::vector<Adventurer*> unoccupied_adventurers = guild.getUnoccupiedAdventurers();
+        if (unoccupied_adventurers.size() <= 0)
+        {
+            giveDialog("INoUnoccupiedAdventurers");
+            return;
+        }
+        if (missions.size() <= 0)
+        {
+            giveDialog("INoMoreMissions");
+            return;
+        }
+        
+        wm.writeNewLine(dialogs["ISelectMission"]["text"].get<std::string>());
+        int options_len = missions.size() + 2;
+        std::string options[options_len];
+        options[0] = "Done";
+        options[missions.size() + 1] = "Home";
+        selected = -1;
+        while (selected == -1)
+        {
+            wm.writeNewLine();
+            for (int i = 0; i < missions.size(); i++)
+            {
+                options[i+1] = std::to_string(i);
+            }
+            
+            selected = gameUtil::chooseOption(wm, options_len, options, 0, true);
+            if (selected == 0)
+            {
+                continue;
+            }
+            else if (selected == missions.size() + 1)
+            {
+                showHome();
+                wm.writeNewLine(dialogs["ISelectMission"]["text"].get<std::string>());
+                selected = -1;
+            }
+            else
+            {
+                int index = selected-1;
+                Debug::dbg << "Selected mission of index " << index << "\n";
+                
+                for (auto &advName : adventurerPtrSelectionDialog(unoccupied_adventurers, MAX_ADVENTURERS_PER_MISSION))
+                {
+                    std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(advName);
+                    if (advOpt.has_value())
+                    {
+                        missions[index].assignAdventurer(*advOpt.value());
+                    }
+                }
+                if (missions[index].assignedAdventurers.size() > 0)
+                {
+                    guild.addMission(missions[index]);
+                    Debug::dbg << "Erasing mission\n";
+                    missions.erase(missions.begin() + index);
+                }
+            }
+        }
+    }
+    
 }
 
 // gets a random number between 1 and max (included)
@@ -457,12 +698,12 @@ Adventurer Game::newRandomAdventurer()
     RNG &rng = RNG::get();
     std::string advFirstName = adventurer_names["first_names"][rng.uniformInt(
         0, 
-        adventurer_names["first_names"].size() - 1
+        adventurer_names["first_names"].size()
     )].get<std::string>();
 
     std::string advLastName = adventurer_names["last_names"][rng.uniformInt(
         0, 
-        adventurer_names["last_names"].size() - 1
+        adventurer_names["last_names"].size()
     )].get<std::string>();
 
     Adventurer adv = Adventurer(advFirstName + " " + advLastName, 100);
@@ -493,6 +734,8 @@ Adventurer Game::newRandomAdventurer()
         Debug::dbg << "Drawn modifier: " << adventurer_modifiers_keys[drawn] << "\n";
         adv.modifiers.push_back(adventurer_modifiers_keys[drawn]);
     }
+
+    adv.salary = getDiceRoll(RANDOM_ADD_SALARY) + BASE_SALARY;
 
     adv.race = races_keys[rng.weightedInt(0, races.size(), races_weights)];
     Debug::dbg << "Drawn race: " << adv.race << "\n";
@@ -584,8 +827,9 @@ Mission Game::newRandomMission(int level)
         
         while (actual_level != level)
         {
-            int rand = rng.weightedInt(0, monsters.size(), monsters_levels);
-            if (actual_level + monsters_levels[rand] < level)
+            int rand = rng.weightedInt(0, monsters.size(), monsters_weights);
+            int monster_level = monsters[monsters_keys[rand]]["level"].get<int>();
+            if (actual_level + monster_level < level)
             {
                 std::string &key = monsters_keys[rand];
                 if (mission_monsters.contains(key))
@@ -597,15 +841,15 @@ Mission Game::newRandomMission(int level)
                     mission_monsters_keys.push_back(key);
                     mission_monsters[key] = 1;
                 }
-                actual_level += monsters_levels[rand];
+                actual_level += monster_level;
             }
             else
             {
                 int lowest_index = 0;
-                int lowest_value = abs(actual_level + monsters_levels[0] - level);
-                for (int i = 1; i < monsters_levels.size(); i++)
+                int lowest_value = abs(actual_level + monsters[monsters_keys[0]]["level"].get<int>() - level);
+                for (int i = 1; i < monsters_weights.size(); i++)
                 {
-                    int potential_lowest = abs(actual_level + monsters_levels[lowest_index] - level);
+                    int potential_lowest = abs(actual_level + monsters[monsters_keys[lowest_index]]["level"].get<int>() - level);
                     if (potential_lowest < lowest_value)
                     {
                         lowest_value = potential_lowest;
@@ -622,12 +866,12 @@ Mission Game::newRandomMission(int level)
                     mission_monsters_keys.push_back(key);
                     mission_monsters[key] = 1;
                 }
+                actual_level += monsters[key]["level"].get<int>();
                 break;
             }
-            
         }
         int reward = actual_level * GOLD_ELIMINATION_MISSION_LEVEL_MUPLTIPLIER;
-        int timeDays = static_cast<int>(std::sqrt(actual_level));
+        int timeDays = static_cast<int>(std::sqrt(actual_level)) + 1;
         Mission mission(std::string("Elimination quest"), actual_level, reward, timeDays, mission_monsters);
         mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size(), terrain_types_weights)];
         mission.createIdentifier();
@@ -959,6 +1203,7 @@ int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &te
 
 void Game::finishMission(Mission &mission)
 {
+    Debug::dbg << "Finishing mission\n";
     MissionResult result = determineSuccess(mission);
     giveDialog("IMissionResult");
     bool lostAdv = result.lostAdventurers.size() > 0;
@@ -983,7 +1228,6 @@ void Game::finishMission(Mission &mission)
         lostAdvLine = "None";
     }
     
-    
     std::vector<std::string> card{
         std::string("Status: " + std::string(result.success ? "Success" : "Failure")),
         std::string("Lost adventurers: " + lostAdvLine),
@@ -994,42 +1238,61 @@ void Game::finishMission(Mission &mission)
     for (auto &advIdentifier : mission.assignedAdventurers)
     {
         int roll = getDiceRoll(100);
-        // chance of negative trait, range 0 to NEGATIVE_MOD_CHANCE
-        if (roll < NEGATIVE_MOD_CHANCE)
+        std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(advIdentifier);
+        if (advOpt.has_value())
         {
-            std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(advIdentifier);
-            if (advOpt.has_value())
+            int neg_mod_chance = result.success ? NEGATIVE_MOD_CHANCE_SUCCESS : NEGATIVE_MOD_CHANCE_FAILURE;
+            // chance of negative trait, range 0 to neg_mod_chance
+            if (roll < neg_mod_chance)
             {
-                std::string mod = giveModWithBenefit(*advOpt.value(), -1);
-                if (!mod.empty())
+                std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(advIdentifier);
+                if (advOpt.has_value())
                 {
-                    card.push_back(" " + advOpt.value()->name + " has gained the negative modifier '" + gameUtil::snakeToNormal(mod) + "' !");
+                    std::string mod = giveModWithBenefit(*advOpt.value(), -1);
+                    if (!mod.empty())
+                    {
+                        card.push_back(" " + advOpt.value()->name + " has gained the negative trait '" + gameUtil::snakeToNormal(mod) + "' !");
+                    }
                 }
             }
-        }
-        // chance of positive trait, range NEGATIVE_MOD_CHANCE to POSITIVE_MOD_CHANCE
-        else if (roll < NEGATIVE_MOD_CHANCE + POSITIVE_MOD_CHANCE)
-        {
-            std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(advIdentifier);
-            if (advOpt.has_value())
+            // chance of positive trait, range neg_mod_chance to POSITIVE_MOD_CHANCE
+            else if (roll < neg_mod_chance + POSITIVE_MOD_CHANCE)
             {
-                std::string mod = giveModWithBenefit(*advOpt.value(), 1);
-                if (!mod.empty())
+                std::optional<Adventurer*> advOpt = guild.getAdventurerByIdentifier(advIdentifier);
+                if (advOpt.has_value())
                 {
-                    card.push_back(" " + advOpt.value()->name + " has gained the positive modifier '" + gameUtil::snakeToNormal(mod) + "' !");
+                    std::string mod = giveModWithBenefit(*advOpt.value(), 1);
+                    if (!mod.empty())
+                    {
+                        card.push_back(" " + advOpt.value()->name + " has gained the positive trait '" + gameUtil::snakeToNormal(mod) + "' !");
+                    }
                 }
             }
+            std::pair<std::string, int> add_stat = giveAdditionalStat(*advOpt.value());
+            card.push_back(" " + advOpt.value()->name + " has gained " + std::to_string(add_stat.second) + " " + add_stat.first + " !");
+
+            // no longer occupied
+            advOpt.value()->occupied = false;
         }
     }
 
-    guild.removeMissionByIdentifier(mission);
     guild.gold += result.gainedGold;
 
+    if (result.success)
+    {
+        guild.level += 2;
+    }
+    else
+    {
+        guild.level -= 1;
+    }
+
     gameUtil::renderCards(wm, {card});
+    wm.writeNewLine();
 }
 
 // renders the character cards of the given adventurers side by side
-void Game::renderCharacters(std::vector<std::string> adventurers)
+void Game::renderAdventurers(std::vector<std::string> adventurers)
 {
     std::vector<std::vector<std::string>> cardsLines;
     for (auto &adv : adventurers)
@@ -1043,7 +1306,18 @@ void Game::renderCharacters(std::vector<std::string> adventurers)
     gameUtil::renderCards(wm, cardsLines);
 }
 
-void Game::renderCharacters()
+void Game::renderAdventurers(std::vector<Adventurer> &adventurers)
+{
+    std::vector<std::vector<std::string>> cardsLines;
+    for (int i = 0; i < adventurers.size(); i++)
+    {
+        std::vector<std::string> card = adventurers[i].toCharacterCard();
+        cardsLines.push_back(card);
+    }
+    gameUtil::renderCards(wm, cardsLines);
+}
+
+void Game::renderAdventurers()
 {
     std::vector<std::vector<std::string>> cardsLines;
     for (auto &adv : guild.adventurers)
@@ -1057,34 +1331,45 @@ void Game::renderCharacters()
 void Game::renderMissions(std::vector<Mission> &missions)
 {
     std::vector<std::vector<std::string>> cardsLines;
-    for (auto &mission : missions)
+    int index = 0;
+    for (int i = 0; i < missions.size(); i++)
     {
-        cardsLines.push_back(toMissionCard(mission));
+        std::vector<std::string> card = toMissionCard(missions[i]);
+        cardsLines.push_back(card);
     }
     gameUtil::renderCards(wm, cardsLines);
 }
 
 void Game::showHome()
 {
-    int choice = giveDialog("QHome", false);
+    Debug::dbg << "Showing home menu\n";
+    int choice = giveDialog("QHome");
     switch (choice)
     {
     case 0:
-        wm.writeNewLine("Current Balance: " + std::to_string(guild.gold) + " Gold");
+        Debug::dbg << "Showing balance\n";
+        gameUtil::renderCards(wm, {{"Current Balance: " + std::to_string(guild.gold) + " Gold"}});
         break;
-    
     case 1:
-        wm.writeNewLine("Food stock: " + std::to_string(guild.rations) + " rations");
+        Debug::dbg << "Showing food stock\n";
+        gameUtil::renderCards(wm, {{"Food stock: " + std::to_string(guild.rations) + " rations"}});
         break;
     case 2:
-        renderCharacters();
+        Debug::dbg << "Showing day count\n";
+        gameUtil::renderCards(wm, {{"Day " + std::to_string(guild.day)}});
         break;
     case 3:
+        Debug::dbg << "Showing adventurer list\n";
+        renderAdventurers();
+        break;
+    case 4:
+        Debug::dbg << "Showing running missions\n";
         renderMissions(guild.missions);
         break;
     default:
         break;
     }
+    wm.writeNewLine();
 }
 
 // this method attempts to find and assign a random modifier to the adventurer that matches the
@@ -1129,9 +1414,61 @@ std::string Game::giveModWithBenefit(Adventurer &adv, int benefit)
     return "";
 }
 
-std::vector<std::string> toMissionCard(Mission &mission)
+// gives additional points (1 to MAX_ADDITIONAL_STAT_INCREASE) to a random stat
+std::pair<std::string, int> Game::giveAdditionalStat(Adventurer &adv)
 {
-    return std::vector<std::string>();
+    int whichStat = getDiceRoll(STATS_COUNT);
+    int amount = getDiceRoll(MAX_ADDITIONAL_STAT_INCREASE);
+    std::pair<std::string, int> result;
+    switch (whichStat)
+    {
+    case 1:
+    {
+        adv.stats.add_strength += amount;
+        result = {"strength", amount};
+        break;
+    }
+    case 2:
+    {
+        adv.stats.add_agility += amount;
+        result = {"agility", amount};
+        break;
+    }
+    case 3:
+    {
+        adv.stats.add_fortitude += amount;
+        result = {"fortitude", amount};
+        break;
+    }
+    case 4:
+    {
+        adv.stats.add_willpower += amount;
+        result = {"willpower", amount};
+        break;
+    }
+    case 5:
+    {
+        adv.stats.add_perception += amount;
+        result = {"perception", amount};
+        break;
+    }
+    case 6:
+    {
+        adv.stats.add_wisdom += amount;
+        result = {"wisdom", amount};
+        break;
+    }
+    case 7:
+    {
+        adv.stats.add_strength += amount;
+        result = {"magic", amount};
+        break;
+    }
+    default:
+        break;
+    }
+    updateAdventurerStatus(adv);
+    return result;
 }
 
 // Creates a mission card (text-based) for the mission
@@ -1141,58 +1478,101 @@ std::vector<std::string> Game::toMissionCard(Mission &mission)
     Debug::dbg << "Creating mission card for mission: " << mission.description << "\n";
     std::vector<std::string> card = {
         std::string("Mission: " + mission.description),
+        std::string("Time to complete: " + std::to_string(mission.days)),
         std::string("Level: " + std::to_string(mission.level)),
         std::string("Reward: " + std::to_string(mission.reward)),
-        std::string("Terrain: " + gameUtil::snakeToNormal(mission.terrainType, true)),
-        std::string("Assigned Adventurers: "),
-        
+        std::string("Terrain: " + gameUtil::snakeToNormal(mission.terrainType, true))
     };
-    for (auto &adv : mission.assignedAdventurers)
+    if (mission.assignedAdventurers.size() > 0)
     {
-        std::optional<Adventurer*> advOptional = guild.getAdventurerByIdentifier(adv);
-        if (advOptional.has_value())
+        card.push_back(std::string("Assigned Adventurers: "));
+        for (auto &adv : mission.assignedAdventurers)
         {
-            card.push_back(" " + advOptional.value()->name);
-        }
-        else
-        {
-            Debug::dbg << "Adventurer doesn't exit !\n";
+            std::optional<Adventurer*> advOptional = guild.getAdventurerByIdentifier(adv);
+            if (advOptional.has_value())
+            {
+                card.push_back(" " + advOptional.value()->name);
+            }
+            else
+            {
+                Debug::dbg << "Adventurer doesn't exit !\n";
+            }
         }
     }
-    card.push_back(std::string("Monsters:"));
-    for (const auto &[key, value] : mission.monsters)
+    if (mission.monsters.size() > 0)
     {
-        card.push_back(" " + gameUtil::snakeToNormal(key, true) + " x" + std::to_string(value));
+        card.push_back(std::string("Monsters:"));
+        for (const auto &[key, value] : mission.monsters)
+        {
+            card.push_back(" " + gameUtil::snakeToNormal(key, true) + " x" + std::to_string(value));
+        }
     }
+    
     return card;
 }
 
 void Game::advanceDay()
 {
+    Debug::dbg << "Passing new day\n";
     guild.day += 1;
-    TheGuild *guildPtr = &guild;
-    WindowManager *wmPtr = &wm;
-    guild.adventurers.erase(
-        std::remove_if(
-            guild.adventurers.begin(), 
-            guild.adventurers.end(), 
-            [guildPtr, wmPtr](int i) {
-                if (guildPtr->rations >= 1)
-                {
-                    guildPtr->adventurers[i].satiation = 100;
+    if (guild.missions.size() > 0)
+    {
+        TheGuild *guildPtr = &guild;
+        WindowManager *wmPtr = &wm;
+        guild.missions.erase(
+            std::remove_if(
+                guild.missions.begin(), 
+                guild.missions.end(), 
+                [guildPtr, wmPtr, this](Mission &mission) {
+                    mission.days -= 1;
+                    if (mission.days <= 0)
+                    {
+                        finishMission(mission);
+                        Debug::dbg << "Removing mission " + mission.identifier << "\n";
+                        return true;
+                    }
+                    return false;
                 }
-                else
-                {
-                    guildPtr->adventurers[i].satiation -= NO_FOOD_SUBSTRACT;
-                }
+            ),
+            guild.missions.end()
+        );
+    }
 
-                bool died = guildPtr->adventurers[i].isStarved();
-                if (died)
-                {
-                    wmPtr->writeNewLine("Adventurer " + guildPtr->adventurers[i].name + " died of starvation...");
+    if (guild.adventurers.size() > 0)
+    {
+        TheGuild *guildPtr = &guild;
+        WindowManager *wmPtr = &wm;
+        guild.adventurers.erase(
+            std::remove_if(
+                guild.adventurers.begin(), 
+                guild.adventurers.end(), 
+                [guildPtr, wmPtr](Adventurer &adv) {
+                    if (guildPtr->rations >= 1)
+                    {
+                        Debug::dbg << "Feeding Adventurer " << adv.name << "\n";
+                        if (!adv.occupied)
+                        {
+                        }
+                        wmPtr->writeNewLine(adv.name + " has been fed !");
+                        adv.satiation = 100;
+                        guildPtr->rations -= 1;
+                    }
+                    else
+                    {
+                        adv.satiation -= NO_FOOD_SUBSTRACT;
+                    }
+    
+                    bool died = adv.isStarved();
+                    if (died)
+                    {
+                        Debug::dbg << "Adventurer " << adv.name << " died of starvation, removing\n";
+                        wmPtr->writeNewLine(adv.name + " died of starvation...");
+                    }
+                    return died; 
                 }
-                return died; 
-            }
-        )
-    );
+            ),
+            guild.adventurers.end()
+        );
+        wm.writeNewLine();
+    }
 }
