@@ -17,4 +17,5 @@ public:
     static nlohmann::json loadJson(const char *path);
     static nlohmann::json loadJson(std::string& path);
     static std::vector<std::string> getFilesInDirectory(const char *path);
+    static std::string getDirectory(std::string path);
 };

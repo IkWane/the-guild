@@ -8,6 +8,7 @@ struct TestStruct {
 
 int main()
 {
+    std::filesystem::create_directories("logs/");
     try
     {
         Debug::initDebug("logs/game_log.txt");

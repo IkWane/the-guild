@@ -14,7 +14,7 @@
         "text": "Welcome to The Guild !"
     },
     "QhasSaveFile": {
-        "text": "Do you wish to load a save file ?",
+        "text": "Do you wish to load a save file ? (stored in the saves/ folder)",
         "choices": [
             "Yes",
             "No, start a new game."

@@ -51,6 +51,7 @@ TheGuild::TheGuild(const char *path)
 void TheGuild::saveGuild(const char *path)
 {
     Debug::dbg << "Saving guild to file: " << path << "\n";
+    std::filesystem::create_directories(FileManager::getDirectory(path));
     std::ofstream file(path);
     nlohmann::json jsonGuild;
     jsonGuild["name"] = name;

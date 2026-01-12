@@ -57,3 +57,15 @@ std::vector<std::string> FileManager::getFilesInDirectory(const char *path)
     }
     return file_names;
 }
+
+std::string FileManager::getDirectory(std::string path)
+{
+    std::string directory;
+    size_t last_slash = path.rfind("/");
+    if (std::string::npos != last_slash)
+    {
+        directory = path.substr(0, last_slash);
+    }
+    
+    return directory;
+}
