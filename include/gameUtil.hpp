@@ -1,12 +1,6 @@
 #pragma once
-#include "magicNumbers.hpp"
 #include "json.hpp"
-#include "RNG.hpp"
-#include "FileManager.hpp"
 #include <ncurses.h>
-#include "Debug.hpp"
-#include "Stats.hpp"
-#include "Adventurer.hpp"
 #include "WindowManager.hpp"
 
 namespace gameUtil

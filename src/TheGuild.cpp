@@ -1,4 +1,6 @@
 #include "TheGuild.hpp"
+#include "magicNumbers.hpp"
+#include "FileManager.hpp"
 
 TheGuild::TheGuild()
 {
@@ -153,6 +155,7 @@ void TheGuild::addMission(Mission &mission)
 // Note : modifying the adventurers vector causes these pointers to become erroneous
 std::vector<Adventurer*> TheGuild::getUnoccupiedAdventurers()
 {
+    Debug::dbg << "Searching for unoccupied adventurers...";
     std::vector<Adventurer*> unoccupied_adventurers = std::vector<Adventurer *>();
     for (auto &adv : adventurers)
     {
@@ -161,6 +164,6 @@ std::vector<Adventurer*> TheGuild::getUnoccupiedAdventurers()
             unoccupied_adventurers.push_back(&adv);
         }
     }
-    
+    Debug::dbg << "Done !\n";
     return unoccupied_adventurers;
 }

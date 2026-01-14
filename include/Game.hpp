@@ -1,14 +1,8 @@
 #pragma once
-#include <iostream>
 #include <string>
 #include <math.h>
 #include <ncurses.h>
-#include "gameUtil.hpp"
-#include "FileManager.hpp"
 #include "TheGuild.hpp"
-#include "Debug.hpp"
-#include <algorithm>
-#include "GameExit.hpp"
 #include <ctime>
 #include "WindowManager.hpp"
 #include "MissionResult.hpp"
@@ -18,8 +12,8 @@ class Game {
 public:
     Game();
     void run();
-    int giveDialog(const char *dialogName, bool _showHome = false, bool canQuit = true);
-    int numberDialog(const char *dialogName, bool _showHome = false);
+    int giveDialog(std::string dialogName, bool _showHome = false, bool canQuit = true);
+    int numberDialog(std::string dialogName, bool _showHome = false);
     std::string textEntryDialog(const char *dialogName);
     std::vector<std::string> adventurerPtrSelectionDialog(std::vector<Adventurer*> &adventurers, int max = -1);
     std::vector<std::string> adventurerSelectionDialog(std::vector<Adventurer> &adventurers, int max = -1);

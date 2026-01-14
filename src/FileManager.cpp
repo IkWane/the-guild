@@ -1,4 +1,6 @@
 #include "FileManager.hpp"
+#include "Debug.hpp"
+#include "GameExit.hpp"
 
 // Loads the content of a file into a string
 std::string FileManager::loadFile(const char *path)
@@ -7,7 +9,7 @@ std::string FileManager::loadFile(const char *path)
     std::ifstream file(path);
     if (!file.is_open())
     {
-        throw GameExit("Error loading file " + std::string(path));
+        throw GameExit("Error loading file " + std::string(path) + "\nCurrent path:" + std::string(std::filesystem::current_path()));
     }
     std::string lineStr;
     std::string result;

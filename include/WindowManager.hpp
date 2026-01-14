@@ -1,7 +1,5 @@
 #pragma once
 #include <ncurses.h>
-#include "Debug.hpp"
-#include "magicNumbers.hpp"
 #include <string>
 #include <vector>
 

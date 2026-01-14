@@ -1,7 +1,7 @@
 #include <iostream>
 #include "FileManager.hpp"
 #include "json.hpp"
-#include <map>
+#include "Debug.hpp"
 
 // Gathers all the tags used in the data/characteristics JSON files
 int main()

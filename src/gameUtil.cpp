@@ -1,4 +1,7 @@
 #include "gameUtil.hpp"
+#include "magicNumbers.hpp"
+#include "Debug.hpp"
+#include "FileManager.hpp"
 
 // Wraps integer a around n (0 to n-1)
 int gameUtil::wrapAround(int a, int n)
@@ -146,7 +149,6 @@ int gameUtil::chooseOption(WindowManager &wm, int optionsLen, std::string option
         {
             break;
         }
-        Debug::dbg << std::to_string(key) << "\n";
     }
     if (giveResult && selected != -1)
     {

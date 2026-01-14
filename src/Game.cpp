@@ -1,4 +1,9 @@
 #include "Game.hpp"
+#include "Debug.hpp"
+#include "RNG.hpp"
+#include "FileManager.hpp"
+#include "magicNumbers.hpp"
+#include "GameExit.hpp"
 
 // initializes the game by loading a save file or creating a new game, based on player input
 // loads configuration based on data/config.json
@@ -53,7 +58,7 @@ Game::Game()
     wm.writeNewLine(" - Scroll/Up/Down = move the game's text output");
     wm.writeNewLine(" - Escape = leave the game");
     wm.writeNewLine(" - Left/Right = change selected option");
-    wm.writeNewLine(" - Enter = select current option");
+    wm.writeNewLine(" - Enter/Space = select current option");
     wm.writeNewLine(" - Most dialogs allow you to select a 'Home' option, go check it out !");
     wm.writeNewLine(" - Adventurers consume 1 ration per day");
     wm.writeNewLine();
@@ -230,11 +235,15 @@ void Game::run()
             if (guild.adventurers.size() > 0)
             {
                 std::vector<Mission> daily_missions{};
-                daily_missions.push_back(newRandomMission(guild.level));
-                for (int i = 1; i < DAILY_MISSIONS_COUNT; i++)
+                
+                daily_missions.push_back(newRandomMission(getDiceRoll(MAX_TRAINING_LEVEL))); // always show a training mission
+                daily_missions.push_back(newRandomMission(guild.level));// always show a mission at the precise guild level
+
+                for (int i = 2; i < DAILY_MISSIONS_COUNT; i++)
                 {
                     daily_missions.push_back(newRandomMission(guild.level + getDiceRoll(MISSION_MAX_ADD_LEVEL)));
                 }
+
                 Debug::dbg << "Showing new daily missions\n";
                 missionSelectionDialog(daily_missions);
             }
@@ -269,7 +278,7 @@ void Game::run()
 }
 
 // sends a dialog to the player based on the data found at dialogName in the data/dialogs.json file
-int Game::giveDialog(const char *dialogName, bool _showHome, bool canQuit)
+int Game::giveDialog(std::string dialogName, bool _showHome, bool canQuit)
 {
     Debug::dbg << "Giving dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
@@ -302,9 +311,9 @@ int Game::giveDialog(const char *dialogName, bool _showHome, bool canQuit)
             );
             if (option == -1)
             {
+                wm.removeLastLine();
                 if (canQuit)
                 {
-                    wm.removeLastLine();
                     int quitChoice = giveDialog("QquitGame", false, false);
                     if (quitChoice == 0)
                     {
@@ -342,7 +351,7 @@ int Game::giveDialog(const char *dialogName, bool _showHome, bool canQuit)
     return -1;
 }
 
-int Game::numberDialog(const char *dialogName, bool _showHome)
+int Game::numberDialog(std::string dialogName, bool _showHome)
 {
     Debug::dbg << "Giving number dialog: " << dialogName << "\n";
     nlohmann::json dialog = dialogs[dialogName];
@@ -359,6 +368,7 @@ int Game::numberDialog(const char *dialogName, bool _showHome)
     {
         min = std::numeric_limits<int>::min();
     }
+    Debug::dbg << min << "\n";
     if (dialog.contains("max"))
     {
         max = dialog["max"].get<int>();
@@ -367,6 +377,7 @@ int Game::numberDialog(const char *dialogName, bool _showHome)
     {
         max = std::numeric_limits<int>::max();
     }
+    Debug::dbg << max << "\n";
     int len = _showHome ? 8 : 7;
     std::string list[len];
     if (_showHome)
@@ -446,8 +457,8 @@ int Game::numberDialog(const char *dialogName, bool _showHome)
         default:
             break;
         }
+        number = std::clamp(number, min, max);
     }
-    number = std::clamp(number, min, max);
     wm.writeNewLine("> " + std::to_string(number));
     wm.writeNewLine();
     wm.updateWindow();
@@ -604,6 +615,12 @@ void Game::missionSelectionDialog(std::vector<Mission> &missions)
     gameUtil::renderCards(wm, cardsLines);
     wm.writeNewLine();
 
+    std::vector<int> mission_numbers(missions.size());
+    for (int i = 0; i < missions.size(); i++)
+    {
+        mission_numbers[i] = i;
+    }
+
     int selected = -1;
     while (selected != 0)
     {
@@ -630,7 +647,7 @@ void Game::missionSelectionDialog(std::vector<Mission> &missions)
             wm.writeNewLine();
             for (int i = 0; i < missions.size(); i++)
             {
-                options[i+1] = std::to_string(i);
+                options[i+1] = std::to_string(mission_numbers[i]);
             }
             
             selected = gameUtil::chooseOption(wm, options_len, options, 0, true);
@@ -644,7 +661,7 @@ void Game::missionSelectionDialog(std::vector<Mission> &missions)
                 wm.writeNewLine(dialogs["ISelectMission"]["text"].get<std::string>());
                 selected = -1;
             }
-            else
+            else if (selected != -1)
             {
                 int index = selected-1;
                 Debug::dbg << "Selected mission of index " << index << "\n";
@@ -657,11 +674,13 @@ void Game::missionSelectionDialog(std::vector<Mission> &missions)
                         missions[index].assignAdventurer(*advOpt.value());
                     }
                 }
-                if (missions[index].assignedAdventurers.size() > 0)
+                if (!missions[index].assignedAdventurers.empty())
                 {
                     guild.addMission(missions[index]);
                     Debug::dbg << "Erasing mission\n";
                     missions.erase(missions.begin() + index);
+                    Debug::dbg << "Erasing mission number\n";
+                    mission_numbers.erase(mission_numbers.begin() + index);
                 }
             }
         }
@@ -698,12 +717,12 @@ Adventurer Game::newRandomAdventurer()
     RNG &rng = RNG::get();
     std::string advFirstName = adventurer_names["first_names"][rng.uniformInt(
         0, 
-        adventurer_names["first_names"].size()
+        adventurer_names["first_names"].size() - 1
     )].get<std::string>();
 
     std::string advLastName = adventurer_names["last_names"][rng.uniformInt(
         0, 
-        adventurer_names["last_names"].size()
+        adventurer_names["last_names"].size() - 1 
     )].get<std::string>();
 
     Adventurer adv = Adventurer(advFirstName + " " + advLastName, 100);
@@ -819,7 +838,7 @@ Mission Game::newRandomMission(int level)
 {
     Debug::dbg << "Creating new random mission of level: " << level << "\n";
     RNG &rng = RNG::get();
-    if (level > 10)
+    if (level > MAX_TRAINING_LEVEL)
     {
         int actual_level = 0;
         std::map<std::string, int> mission_monsters = std::map<std::string, int>();
@@ -871,7 +890,7 @@ Mission Game::newRandomMission(int level)
             }
         }
         int reward = actual_level * GOLD_ELIMINATION_MISSION_LEVEL_MUPLTIPLIER;
-        int timeDays = static_cast<int>(std::sqrt(actual_level)) + 1;
+        int timeDays = static_cast<int>(std::sqrt(actual_level)) - 2; // minimum for actual_level is 10, sqrt(10) ~= 3, 1 day minimum time
         Mission mission(std::string("Elimination quest"), actual_level, reward, timeDays, mission_monsters);
         mission.terrainType = terrain_types_keys[rng.weightedInt(0, terrain_types.size(), terrain_types_weights)];
         mission.createIdentifier();
@@ -1055,7 +1074,7 @@ std::vector<std::string> Game::determineSurvival(Mission &mission, Stats &monste
                 }
                 for (auto &tag : terrainData["tags"])
                 {
-                    if (*i == tag)
+                    if (*i == tag.get<std::string>())
                     {
                         points += MATCHING_TAG_POINTS;
                     }
@@ -1086,7 +1105,7 @@ std::vector<std::string> Game::determineSurvival(Mission &mission, Stats &monste
                 }
                 for (auto &tag : terrainData["tags"])
                 {
-                    if (*i == tag)
+                    if (*i == tag.get<std::string>())
                     {
                         points -= MATCHING_TAG_POINTS;
                     }
@@ -1153,7 +1172,7 @@ int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &te
         }
         for (auto &tag : terrainData["tags"])
         {
-            if (*i == tag)
+            if (*i == tag.get<std::string>())
             {
                 points += MATCHING_TAG_POINTS;
             }
@@ -1183,7 +1202,7 @@ int Game::calculatePoints(Stats &teamStats, Stats &monsterStats, std::string &te
         }
         for (auto &tag : terrainData["tags"])
         {
-            if (*i == tag)
+            if (*i == tag.get<std::string>())
             {
                 points -= MATCHING_TAG_POINTS;
             }

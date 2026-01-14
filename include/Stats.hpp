@@ -1,7 +1,7 @@
 #pragma once
-#include <vector>
 #include <math.h>
-#include "Debug.hpp"
+#include <string>
+#include <vector>
 
 struct Stats
 {

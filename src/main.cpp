@@ -1,6 +1,6 @@
 #include <ncurses.h>
 #include "Game.hpp"
-#include <algorithm>
+#include "GameExit.hpp"
 
 struct TestStruct {
     int i;
@@ -8,10 +8,18 @@ struct TestStruct {
 
 int main()
 {
+    std::string path = std::filesystem::current_path().string();
+    std::string directory_name = path.substr(path.rfind('/'), path.length() - 1);
+    if (directory_name == "/build")
+    {
+        std::filesystem::current_path(path.substr(0, path.rfind('/')));
+    }
+    
     std::filesystem::create_directories("logs/");
     try
     {
         Debug::initDebug("logs/game_log.txt");
+        Debug::dbg << directory_name << "\n";
         Debug::dbg << std::string("\\").length() << "\n";
         Game game = Game();
         game.run();

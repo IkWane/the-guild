@@ -1,4 +1,6 @@
 #include "WindowManager.hpp"
+#include "Debug.hpp"
+#include "magicNumbers.hpp"
 
 WindowManager::WindowManager()
 {
@@ -7,7 +9,8 @@ WindowManager::WindowManager()
     text = std::vector<std::string>();
     Debug::dbg << "Getting window size\n";
     getmaxyx(window, max_y, max_x);
-    max_x -= 2;
+    max_x -= WINDOW_PADDING_RIGHT;
+    max_y -= WINDOW_PADDING_DOWN;
     current_line = 0;
     Debug::dbg << "Configuring ncurses\n";
     cbreak();
@@ -28,7 +31,13 @@ void WindowManager::writePos(int y, std::string _text)
     #ifdef WINDOW_RENDER_DEBUG
     Debug::dbg << "Replacing line " << y << " with : " << _text << "\n";
     #endif
-    text[y] = "  " + _text;
+    text[y] = "";
+    for (int i = 0; i < WINDOW_PADDING_DOWN; i++)
+    {
+        text[y] += " ";
+    }
+    
+    text[y] += _text;
     current_line = y;
 }
 

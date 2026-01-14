@@ -1,4 +1,5 @@
 #include "Stats.hpp"
+#include "Debug.hpp"
 
 // calculates the level appropriate for the stats
 int Stats::calculateLevel()

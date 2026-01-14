@@ -1,12 +1,6 @@
 #pragma once
-#include <fstream>
-#include <iostream>
 #include <string>
-#include <filesystem>
 #include "json.hpp"
-#include "gameUtil.hpp"
-#include "Debug.hpp"
-#include "GameExit.hpp"
 
 // All paths are relative to the executable file
 class FileManager

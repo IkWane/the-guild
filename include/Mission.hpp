@@ -1,9 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "Adventurer.hpp"
 #include "json.hpp"
-#include "Debug.hpp"
-#include "gameUtil.hpp"
 
 class Mission
 {

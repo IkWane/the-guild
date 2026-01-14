@@ -1,8 +1,6 @@
 #pragma once
 #include <random>
 #include <climits>
-#include <iostream>
-#include <string>
 #include <vector>
 
 class RNG 
