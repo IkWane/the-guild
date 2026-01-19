@@ -183,15 +183,11 @@ void Game::run()
                     int salary = adv.getSalary();
                     if (salary > guild.gold)
                     {
-                        wm.writeNewLine(adv.name + " cannot be paid in full !");
-                        wm.writeNewLine("-" + std::to_string(std::max(0, guild.gold)) + " Gold to " + adv.name);
-                        guild.gold = std::min(guild.gold, 0);
+                        wm.writeNewLine("Guild funds run low ! " + adv.name + " cannot be paid in full, salary is halved.");
+                        salary /= 2;
                     }
-                    else
-                    {
-                        wm.writeNewLine("-" + std::to_string(salary) + " Gold to " + adv.name);
-                        guild.gold -= salary;
-                    }
+                    wm.writeNewLine("-" + std::to_string(salary) + " Gold to " + adv.name);
+                    guild.gold -= salary;
                 }
                 wm.writeNewLine();
             }
