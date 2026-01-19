@@ -542,14 +542,14 @@ std::vector<std::string> Game::adventurerPtrSelectionDialog(std::vector<Adventur
         }
         else if (selected == 1)
         {
-            if (pos + MAX_OPTIONS_ADV_SELECTION < showing_len)
+            if (pos > 0)
             {
-                pos++;
+                pos--;
             }
         } 
         else if (selected == showing_len + 2)
         {
-            if (pos > 0)
+            if (pos + MAX_OPTIONS_ADV_SELECTION < adventurers.size())
             {
                 pos++;
             }
